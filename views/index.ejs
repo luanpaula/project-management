@@ -1,0 +1,543 @@
+<link rel="stylesheet" href="/styles.css">
+
+<% if (projetos.length===0) { %>
+  <div class="welcome-message fade-in">
+    <h2>Bem-vindo ao seu painel!</h2>
+    <p>Aqui você pode gerenciar seus projetos com facilidade.</p>
+  </div>
+  <% } else { %>
+    <div class="projects-header fade-in">
+      <h2>Seus Projetos</h2>
+      <a href="/create" class="new-project-btn">
+        Novo Projeto +
+      </a>
+    </div>
+
+    <div class="table-container fade-in">
+      <table class="projects-table">
+        <thead>
+          <tr>
+            <th>Projeto</th>
+            <th>Status</th>
+            <th>Início</th>
+            <th>Prazo</th>
+            <th>Conclusão</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <% projetos.forEach((proj)=> { %>
+            <tr class="project-row" id="projeto-<%= proj.id %>" data-projeto-id="<%= proj.id %>">
+              <td class="project-name-cell">
+                <button onclick='toggleTarefas("<%= proj.id %>")' class="toggle-btn">
+                  <span id="icone-<%= proj.id %>">▸</span>
+                </button>
+                <input type="text" class="table-input auto-save" data-tipo="projeto" data-projeto-id="<%= proj.id %>"
+                  data-campo="nome" value="<%= proj.nome %>">
+              </td>
+              <td>
+                <select class="table-input auto-save" data-tipo="projeto" data-projeto-id="<%= proj.id %>"
+                  data-campo="status">
+                  <option value=""></option>
+                  <option value="Não iniciado" <%=proj.status==="Não iniciado" ? "selected" : "" %>>Não iniciado
+                  </option>
+                  <option value="Em andamento" <%=proj.status==="Em andamento" ? "selected" : "" %>>Em andamento
+                  </option>
+                  <option value="Concluído" <%=proj.status==="Concluído" ? "selected" : "" %>>Concluído</option>
+                  <option value="Cancelado" <%=proj.status==="Cancelado" ? "selected" : "" %>>Cancelado</option>
+                </select>
+              </td>
+              <td>
+                <input type="date" class="table-input auto-save" data-tipo="projeto" data-projeto-id="<%= proj.id %>"
+                  data-campo="dataInicio" value="<%= proj.dataInicio %>">
+              </td>
+              <td>
+                <input type="date" class="table-input auto-save" data-tipo="projeto" data-projeto-id="<%= proj.id %>"
+                  data-campo="dataPrazo" value="<%= proj.dataPrazo %>">
+              </td>
+              <td>
+                <input type="date" class="table-input auto-save" data-tipo="projeto" data-projeto-id="<%= proj.id %>"
+                  data-campo="dataConclusao" value="<%= proj.dataConclusao %>">
+              </td>
+            </tr>
+
+            <tr id="tarefas-<%= proj.id %>" class="hidden nested-container">
+              <td colspan="5">
+                <table class="nested-table">
+                  <thead>
+                    <tr>
+                      <th class="checkbox-col">✓</th>
+                      <th>Tarefa</th>
+                      <th>Status</th>
+                      <th>Início</th>
+                      <th>Prazo</th>
+                      <th>Conclusão</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% proj.tarefas.forEach((tarefa)=> { %>
+                      <tr class="task-row">
+                        <td class="checkbox-col">
+                          <input type="checkbox" class="auto-save" data-tipo="tarefa" data-projeto-id="<%= proj.id %>"
+                            data-tarefa-id="<%= tarefa.id %>" data-campo="concluida" <%=tarefa.concluida ? "checked"
+                            : "" %>>
+                        </td>
+                        <td class="task-name-cell">
+                          <button onclick='toggleSubtarefas("<%= proj.id %>", "<%= tarefa.id %>")'
+                            class="toggle-btn small">
+                            <span id="icone-sub-<%= proj.id %>-<%= tarefa.id %>">▸</span>
+                          </button>
+                          <input type="text" class="table-input auto-save" data-tipo="tarefa"
+                            data-projeto-id="<%= proj.id %>" data-tarefa-id="<%= tarefa.id %>" data-campo="titulo"
+                            value="<%= tarefa.titulo %>">
+                        </td>
+                        <td>
+                          <select class="table-input auto-save" data-tipo="tarefa" data-projeto-id="<%= proj.id %>"
+                            data-tarefa-id="<%= tarefa.id %>" data-campo="status">
+                            <option value=""></option>
+                            <option value="Não iniciado" <%=tarefa.status==="Não iniciado" ? "selected" : "" %>>Não
+                              iniciado</option>
+                            <option value="Em andamento" <%=tarefa.status==="Em andamento" ? "selected" : "" %>>Em
+                              andamento</option>
+                            <option value="Concluído" <%=tarefa.status==="Concluído" ? "selected" : "" %>>Concluído
+                            </option>
+                            <option value="Cancelado" <%=tarefa.status==="Cancelado" ? "selected" : "" %>>Cancelado
+                            </option>
+                          </select>
+                        </td>
+                        <td>
+                          <input type="date" class="table-input auto-save" data-tipo="tarefa"
+                            data-projeto-id="<%= proj.id %>" data-tarefa-id="<%= tarefa.id %>" data-campo="dataInicio"
+                            value="<%= tarefa.dataInicio || "" %>">
+                        </td>
+                        <td>
+                          <input type="date" class="table-input auto-save" data-tipo="tarefa"
+                            data-projeto-id="<%= proj.id %>" data-tarefa-id="<%= tarefa.id %>" data-campo="dataPrazo"
+                            value="<%= tarefa.dataPrazo || "" %>">
+                        </td>
+                        <td>
+                          <input type="date" class="table-input auto-save" data-tipo="tarefa"
+                            data-projeto-id="<%= proj.id %>" data-tarefa-id="<%= tarefa.id %>"
+                            data-campo="dataConclusao" value="<%= tarefa.dataConclusao || "" %>">
+                        </td>
+                      </tr>
+
+                      <tr id="subtarefas-<%= proj.id %>-<%= tarefa.id %>" class="hidden">
+                        <td colspan="6">
+                          <table class="subtasks-table">
+                            <thead>
+                              <tr>
+                                <th class="checkbox-col">✓</th>
+                                <th>Subtarefa</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <% tarefa.subtarefas?.forEach((sub)=> { %>
+                                <tr class="subtask-row">
+                                  <td class="checkbox-col">
+                                    <input type="checkbox" class="auto-save" data-tipo="subtarefa"
+                                      data-projeto-id="<%= proj.id %>" data-tarefa-id="<%= tarefa.id %>"
+                                      data-subtarefa-id="<%= sub.id %>" data-campo="concluida" <%=sub.concluida
+                                      ? "checked" : "" %>>
+                                  </td>
+                                  <td>
+                                    <input type="text" class="table-input auto-save" data-tipo="subtarefa"
+                                      data-projeto-id="<%= proj.id %>" data-tarefa-id="<%= tarefa.id %>"
+                                      data-subtarefa-id="<%= sub.id %>" data-campo="titulo" value="<%= sub.titulo %>">
+                                  </td>
+                                </tr>
+                                <% }) %>
+                                  <tr class="new-subtask-row">
+                                    <td></td>
+                                    <td colspan="2">
+                                      <input type="text" placeholder="Nova subtarefa..." class="table-input placeholder"
+                                        onkeydown='if(event.key === "Enter") criarSubtarefaSePreenchida(this, "<%= proj.id %>", "<%= tarefa.id %>")'>
+                                    </td>
+                                  </tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      <% }) %>
+
+                        <tr class="new-task-row">
+                          <td></td>
+                          <td colspan="5">
+                            <input type="text" placeholder="Nova tarefa..." class="table-input placeholder"
+                              onblur='criarTarefaSePreenchida("<%= proj.id %>", this)'>
+                          </td>
+                        </tr>
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+            <% }) %>
+
+              <tr class="new-project-row">
+                <td colspan="5">
+                  <input type="text" placeholder="Novo projeto..." class="table-input placeholder"
+                    onblur="criarProjetoSePreenchido(this)">
+                </td>
+              </tr>
+        </tbody>
+      </table>
+      <div id="context-menu" class="context-menu hidden">
+        <ul>
+          <li onclick="copiarId()">📋 Copiar ID</li>
+          <li onclick="renomear()">✏️ Renomear</li>
+          <li onclick="duplicar()">📝 Duplicar</li>
+          <li onclick="excluir()">🗑️ Excluir</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      function toggleTarefas(projId) {
+        const row = document.getElementById(`tarefas-${projId}`);
+        const icon = document.getElementById(`icone-${projId}`);
+        row.classList.toggle('hidden');
+        icon.textContent = row.classList.contains('hidden') ? '▸' : '▾';
+        console.log(projId);
+      }
+
+      function toggleSubtarefas(projId, tarefaId) {
+        const subtarefaTable = document.getElementById(`subtarefas-${projId}-${tarefaId}`);
+        const icone = document.getElementById(`icone-sub-${projId}-${tarefaId}`);
+        const isHidden = subtarefaTable.classList.contains("hidden");
+
+        subtarefaTable.classList.toggle("hidden", !isHidden);
+        icone.textContent = isHidden ? "▾" : "▸";
+        console.log(tarefaId);
+      }
+
+      function atualizarProjeto(id, campo, valor) {
+        console.log('id:', id, '\ncampo:', campo, '\nvalor:', valor);
+
+        fetch(`/projetos/${id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ campo, valor })
+        })
+          .then(res => res.json())
+          .then(() => mostrarPopup('Projeto atualizado'))
+          .catch(err => {
+            console.error('Erro:', err);
+            mostrarPopup('Erro ao atualizar projeto', 'erro');
+          });
+      }
+
+      function atualizarTarefa(projId, tarefaId, campo, valor) {
+        fetch(`/projetos/${projId}/tarefas/${tarefaId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ campo, valor })
+        })
+          .then(res => res.json())
+          .then(() => mostrarPopup('Tarefa atualizada'))
+          .catch(err => {
+            console.error('Erro:', err);
+            mostrarPopup('Erro ao atualizar tarefa', 'erro');
+          });
+      }
+
+      function toggleTarefaConcluida(projId, tarefaId, marcado) {
+        fetch(`/projetos/${projId}/tarefas/${tarefaId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ campo: 'concluida', valor: marcado })
+        })
+          .then(res => {
+            if (!res.ok) throw new Error("Erro ao marcar tarefa");
+            return res.json();
+          })
+          .then(() => console.log("Status da tarefa atualizado"))
+          .catch(err => console.error(err));
+      }
+
+      function criarProjetoSePreenchido(input) {
+        const nome = input.value.trim();
+        if (!nome) return;
+
+        fetch('/projetos/novo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome })
+        })
+          .then(res => {
+            if (!res.ok) throw new Error("Erro ao criar projeto");
+            return res.json();
+          })
+          .then(data => {
+            const tabela = document.querySelector('tbody');
+
+            // Cria a linha principal do projeto
+            const novaLinha = document.createElement('tr');
+            novaLinha.className = "project-row";
+            novaLinha.innerHTML = `
+              <td class="project-name-cell">
+                <button onclick='toggleTarefas("${data.id}")' class="toggle-btn">
+                  <span id="icone-${data.id}">▸</span>
+                </button>
+                <input type="text" class="table-input" value="${nome}"
+                  onblur="atualizarProjeto('${data.id}', 'nome', this.value)">
+              </td>
+              <td>
+                <input type="text" class="table-input" value=""
+                  onblur="atualizarProjeto('${data.id}', 'status', this.value)">
+              </td>
+              <td>
+                <input type="date" class="table-input" value=""
+                  onblur="atualizarProjeto('${data.id}', 'dataInicio', this.value)">
+              </td>
+              <td>
+                <input type="date" class="table-input" value=""
+                  onblur="atualizarProjeto('${data.id}', 'dataPrazo', this.value)">
+              </td>
+              <td>
+                <input type="date" class="table-input" value=""
+                  onblur="atualizarProjeto('${data.id}', 'dataConclusao', this.value)">
+              </td>
+            `;
+
+            const linhaTarefas = document.createElement('tr');
+            linhaTarefas.id = `tarefas-${data.id}`;
+            linhaTarefas.className = "hidden nested-container";
+            linhaTarefas.innerHTML = `
+              <td colspan="5">
+                <table class="nested-table">
+                  <thead>
+                    <tr>
+                      <th class="checkbox-col">✓</th>
+                      <th>Tarefa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="new-task-row">
+                      <td></td>
+                      <td>
+                        <input type="text" placeholder="Nova tarefa..."
+                          class="table-input placeholder"
+                          onblur='criarTarefaSePreenchida("${data.id}", this)'>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            `;
+
+            tabela.appendChild(novaLinha);
+            tabela.appendChild(linhaTarefas);
+
+            input.value = '';
+          })
+          .catch(err => console.error(err));
+      }
+
+      function criarTarefaSePreenchida(projId, input) {
+        const nome = input.value.trim();
+        if (!nome) {
+          console.error("O título da tarefa não pode estar vazio.");
+          return;
+        }
+
+        fetch(`/projetos/${projId}/tarefas`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome })
+        })
+          .then(res => {
+            if (!res.ok) throw new Error("Erro ao adicionar tarefa");
+            return res.json();
+          })
+          .then(data => {
+            const tabela = input.closest("table").querySelector("tbody");
+            const novaTarefa = document.createElement('tr');
+            novaTarefa.className = "task-row";
+            novaTarefa.innerHTML = `
+              <td class="checkbox-col">
+                <input type="checkbox"
+                  onblur="toggleTarefaConcluida('${projId}', '${data.id}', this.checked)">
+              </td>
+              <td class="task-name-cell">
+                <button onclick="toggleSubtarefas('${projId}', '${data.id}')"
+                  class="toggle-btn small">
+                  <span id="icone-sub-${projId}-${data.id}">▸</span>
+                </button>
+                <input type="text" class="table-input" value="${data.titulo}"
+                  onblur="atualizarTarefa('${projId}', '${data.id}', 'titulo', this.value)">
+              </td>
+              <td>
+                <input type="text" class="table-input" value="${data.status || ""}"
+                  onblur="atualizarTarefa('${projId}', '${data.id}', 'status', this.value)">
+              </td>
+              <td>
+                <input type="date" class="table-input" value="${data.dataInicio || ""}"
+                  onblur="atualizarTarefa('${projId}', '${data.id}', 'dataInicio', this.value)">
+              </td>
+              <td>
+                <input type="date" class="table-input" value="${data.dataPrazo || ""}"
+                  onblur="atualizarTarefa('${projId}', '${data.id}', 'dataPrazo', this.value)">
+              </td>
+              <td>
+                <input type="date" class="table-input" value="${data.dataConclusao || ""}"
+                  onblur="atualizarTarefa('${projId}', '${data.id}', 'dataConclusao', this.value)">
+              </td>
+            `;
+
+            tabela.insertBefore(novaTarefa, tabela.lastElementChild);
+
+            const novaLinhaSubtarefas = document.createElement('tr');
+            novaLinhaSubtarefas.id = `subtarefas-${projId}-${data.id}`;
+            novaLinhaSubtarefas.className = "hidden";
+            novaLinhaSubtarefas.innerHTML = `
+              <td colspan="6">
+                <table class="subtasks-table">
+                  <thead>
+                    <tr>
+                      <th class="checkbox-col">✓</th>
+                      <th>Subtarefa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="new-subtask-row">
+                      <td></td>
+                      <td>
+                        <input type="text" placeholder="Nova subtarefa..."
+                          class="table-input placeholder"
+                          onkeydown='if(event.key === "Enter") criarSubtarefaSePreenchida(this, "${projId}", "${data.id}")'>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </td>
+            `;
+
+            tabela.insertBefore(novaLinhaSubtarefas, tabela.lastElementChild);
+            input.value = '';
+          })
+          .catch(err => {
+            console.error("Erro ao adicionar tarefa:", err);
+          });
+      }
+
+      function criarSubtarefaSePreenchida(input, projId, tarefaId) {
+        const nome = input.value.trim();
+        if (!nome) {
+          console.error("O título da subtarefa não pode estar vazio.");
+          return;
+        }
+
+        fetch(`/projetos/${projId}/tarefas/${tarefaId}/subtarefas`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ titulo: nome })
+        })
+          .then(res => {
+            if (!res.ok) throw new Error("Erro ao criar subtarefa");
+            return res.json();
+          })
+          .then(data => {
+            const tabelaSubtarefas = input.closest("table").querySelector("tbody");
+            const novaSubtarefa = document.createElement('tr');
+            novaSubtarefa.className = "subtask-row";
+            novaSubtarefa.innerHTML = `
+              <td class="checkbox-col">
+                <input type="checkbox"
+                  onblur="toggleSubtarefaConcluida('${projId}', '${tarefaId}', '${data.id}', this.checked)">
+              </td>
+              <td>
+                <input type="text" class="table-input" value="${data.titulo}"
+                  onblur="atualizarSubtarefa('${projId}', '${tarefaId}', '${data.id}', this.value)">
+              </td>
+            `;
+            tabelaSubtarefas.insertBefore(novaSubtarefa, tabelaSubtarefas.lastElementChild);
+            input.value = '';
+          })
+          .catch(err => {
+            console.error("Erro ao criar subtarefa:", err);
+          });
+      }
+
+      function atualizarSubtarefa(projId, tarefaId, subIndex, novoTitulo) {
+        fetch(`/projetos/${projId}/tarefas/${tarefaId}/subtarefas/${subIndex}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ titulo: novoTitulo })
+        })
+          .then(res => res.json())
+          .then(() => mostrarPopup('Subtarefa atualizada'))
+          .catch(err => {
+            console.error('Erro:', err);
+            mostrarPopup('Erro ao atualizar subtarefa', 'erro');
+          });
+      }
+
+      function toggleSubtarefaConcluida(projId, tarefaId, subtarefaId, concluida) {
+        fetch(`/projetos/${projId}/tarefas/${tarefaId}/subtarefas/${subtarefaId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ concluida })
+        })
+          .then(res => {
+            if (!res.ok) throw new Error("Erro ao atualizar subtarefa");
+            return res.json();
+          })
+          .then(data => {
+            console.log("Subtarefa atualizada:", data);
+          })
+          .catch(err => {
+            console.error("Erro ao atualizar subtarefa:", err);
+          });
+      }
+
+      function configAutoSave() {
+        document.querySelectorAll('.table-input').forEach(input => {
+          input.addEventListener('blur', salvarInput);
+          input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              input.blur();
+            }
+          });
+        });
+      }
+
+      function salvarInput(event) {
+        const input = event.target;
+        const tr = input.closest('tr');
+        const valor = input.value;
+
+        const projetoId = input.dataset.projetoId;
+        const tarefaId = input.dataset.tarefaId;
+        const subtarefaId = input.dataset.subtarefaId;
+
+        const campo = input.dataset?.campo || input.getAttribute('data-campo');
+
+        if (tr.classList.contains('project-row')) {
+          atualizarProjeto(projetoId, campo, valor);
+        } else if (tr.classList.contains('task-row')) {
+          atualizarTarefa(projetoId, tarefaId, campo, valor);
+        } else if (tr.classList.contains('subtask-row')) {
+          atualizarSubtarefa(projetoId, tarefaId, subtarefaId, valor);
+        }
+      }
+
+      function mostrarPopup(mensagem, tipo = 'sucesso') {
+        const popup = document.createElement('div');
+        popup.className = `popup-msg ${tipo}`;
+        popup.textContent = mensagem;
+
+        document.body.appendChild(popup);
+
+        setTimeout(() => popup.classList.add('visivel'), 10);
+        setTimeout(() => {
+          popup.classList.remove('visivel');
+          setTimeout(() => popup.remove(), 300);
+        }, 2500);
+      }
+
+      configAutoSave();
+    </script>
+    <% } %>

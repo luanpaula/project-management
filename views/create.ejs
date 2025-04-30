@@ -1,0 +1,128 @@
+<link rel="stylesheet" href="/styles.css">
+
+<div class="page-center">
+  <h2 class="section-title">Criar Novo Projeto</h2>
+
+  <form method="POST" action="/projetos" class="form-container fade-in">
+    <div class="form-group">
+      <label for="nome" class="form-label">Nome do Projeto</label>
+      <input type="text" id="nome" name="nome" required class="form-input" />
+    </div>
+
+    <div class="form-group">
+      <label for="descricao" class="form-label">Descrição</label>
+      <textarea id="descricao" name="descricao" rows="5" class="form-input"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="status" class="form-label">Status</label>
+      <select name="status" id="status" class="form-input">
+        <option value="Pendente">Pendente</option>
+        <option value="Em andamento">Em andamento</option>
+        <option value="Concluído">Concluído</option>
+      </select>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="dataInicio" class="form-label">Data de Início</label>
+        <input type="date" id="dataInicio" name="dataInicio" class="form-input" />
+      </div>
+
+      <div class="form-group">
+        <label for="dataPrazo" class="form-label">Data de Prazo</label>
+        <input type="date" id="dataPrazo" name="dataPrazo" class="form-input" />
+      </div>
+
+      <div class="form-group">
+        <label for="dataConclusao" class="form-label">Data de Conclusão</label>
+        <input type="date" id="dataConclusao" name="dataConclusao" class="form-input" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="form-group-header">
+        <label class="form-label">Checklist de Tarefas</label>
+        <button type="button" id="addTarefa" class="add-task-btn">+ Adicionar tarefa</button>
+      </div>
+
+      <div id="tarefas" class="task-list">
+        <div class="tarefa-wrapper">
+          <input type="text" name="tarefas[]" placeholder="Tarefa 1" class="form-input tarefa-input" />
+          <button type="button" class="remove-btn">
+            <i class="fa fa-trash-o" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <button type="submit" class="submit-btn">Criar Projeto</button>
+  </form>
+  <script>
+    const tarefasDiv = document.getElementById('tarefas');
+    const addTarefaBtn = document.getElementById('addTarefa');
+    const form = document.querySelector('form');
+
+    // Função para criar os inputs das tarefas com o botão de exclusão
+    function criarTarefaInput(numero) {
+      const tarefaWrapper = document.createElement('div');
+      tarefaWrapper.className = 'tarefa-wrapper';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = 'tarefas[]';
+      input.placeholder = `Tarefa ${numero}`;
+      input.className = 'form-input tarefa-input';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'remove-btn';
+      removeBtn.innerHTML = `<i class="fa fa-trash-o" aria-hidden="true"></i>`;
+
+      // Evento para remover o wrapper e reordenar tarefas
+      removeBtn.addEventListener('click', () => {
+        tarefaWrapper.remove();
+        reordenarTarefas();
+      });
+
+      tarefaWrapper.appendChild(input);
+      tarefaWrapper.appendChild(removeBtn);
+
+      return tarefaWrapper;
+    }
+
+    // Função para reordenar os placeholders das tarefas
+    function reordenarTarefas() {
+      const tarefas = tarefasDiv.querySelectorAll('.tarefa-wrapper input[name="tarefas[]"]');
+      tarefas.forEach((input, index) => {
+        input.placeholder = `Tarefa ${index + 1}`;
+      });
+    }
+
+    // Adiciona nova tarefa
+    addTarefaBtn.addEventListener('click', () => {
+      const tarefaElemento = criarTarefaInput(tarefasDiv.children.length + 1);
+      tarefasDiv.appendChild(tarefaElemento);
+      reordenarTarefas();
+    });
+
+    // Remove tarefas vazias antes de enviar o formulário
+    form.addEventListener('submit', (e) => {
+      const tarefas = tarefasDiv.querySelectorAll('input[name="tarefas[]"]');
+      tarefas.forEach((tarefa) => {
+        if (!tarefa.value.trim()) {
+          tarefa.parentElement.remove();
+        }
+      });
+      reordenarTarefas();
+    });
+
+    // Aplica o evento de remover na primeira tarefa já existente
+    document.querySelectorAll('.remove-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.target.closest('.tarefa-wrapper').remove();
+        reordenarTarefas();
+      });
+    });
+
+  </script>

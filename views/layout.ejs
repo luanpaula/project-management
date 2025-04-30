@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    <%= title %>
+  </title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+
+  <div id="overlay"></div>
+
+  <header>
+    <div class="header-content">
+      <button id="menu-toggle">&#9776;</button>
+      <h1>Controle de Projetos</h1>
+    </div>
+    <a href="#perfil" class="avatar">
+      <svg fill="currentColor" viewBox="0 0 24 24">
+        <path
+          d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
+      </svg>
+    </a>
+  </header>
+
+  <aside id="sidebar">
+    <div class="sidebar-content">
+      <button class="sidebar-close">&times;</button>
+      <h2>Menu</h2>
+      <ul class="sidebar-nav">
+        <li><a href="/">Lista</a></li>
+        <li><a href="/create">Criar Projeto</a></li>
+      </ul>
+      <button id="theme-toggle">
+        Alternar Tema
+      </button>
+    </div>
+  </aside>
+
+  <main>
+    <%- body %>
+  </main>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menu-toggle');
+    const overlay = document.getElementById('overlay');
+    const themeToggle = document.getElementById('theme-toggle');
+    const sidebarClose = document.querySelector('.sidebar-close');
+    const html = document.documentElement;
+
+    // Verifica preferência do sistema
+    // if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    //   html.setAttribute('data-theme', 'dark');
+    // }
+    html.setAttribute('data-theme', 'light');
+
+    // Funções de controle do sidebar
+    function openSidebar() {
+      sidebar.classList.add('active');
+      overlay.classList.add('active');
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('active');
+      overlay.classList.remove('active');
+    }
+
+    // Event listeners
+    menuToggle.addEventListener('click', openSidebar);
+    overlay.addEventListener('click', closeSidebar);
+    sidebarClose.addEventListener('click', closeSidebar);
+
+    // Fecha o sidebar ao redimensionar (opcional)
+    window.addEventListener('resize', () => {
+      if (sidebar.classList.contains('active')) {
+        closeSidebar();
+      }
+    });
+
+    // Alternador de tema
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      html.setAttribute('data-theme', newTheme);
+    });
+  </script>
+</body>
+
+</html>
