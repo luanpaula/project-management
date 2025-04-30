@@ -1,9 +1,9 @@
 [
   {
     "id": "d1de3d00-a4a8-46f2-883c-8d47629ea207",
-    "nome": "Melhoria número 123",
+    "nome": "Melhoria no processo 123",
     "descricao": "",
-    "status": "Em andamento",
+    "status": "Não iniciado",
     "dataInicio": "",
     "dataPrazo": "",
     "dataConclusao": "",
@@ -13,9 +13,9 @@
         "titulo": "desenhar no solid",
         "concluida": true,
         "descricao": "",
-        "status": "",
+        "status": "Não iniciado",
         "dataInicio": "",
-        "dataPrazo": "",
+        "dataPrazo": "2025-04-30",
         "dataConclusao": "",
         "subtarefas": [
           {
@@ -55,17 +55,78 @@
     ]
   },
   {
-    "id": "c6ff6123-7272-47fc-b7c9-1f011d84f1ec",
+    "id": "616fcc5d-0fe7-4ec3-a89d-f09c9db3719c",
     "nome": "teste",
     "descricao": "",
-    "status": "Não iniciado",
+    "status": "",
     "dataInicio": "",
     "dataPrazo": "",
     "dataConclusao": "",
     "tarefas": [
       {
-        "id": "063d0baa-55cf-42a7-9648-bbd195d8e922",
-        "titulo": "teste 23",
+        "id": "437ad4b5-d4a8-4be2-97e0-d8860679186b",
+        "titulo": "teste",
+        "concluida": false,
+        "descricao": "",
+        "status": "",
+        "dataInicio": "",
+        "dataPrazo": "",
+        "dataConclusao": "",
+        "subtarefas": [
+          {
+            "id": "15869bef-e1cf-4f2a-9b6b-40b9c894ac00",
+            "titulo": "1",
+            "concluida": false
+          },
+          {
+            "id": "6f781061-ba48-42a0-b834-6455830f18ab",
+            "titulo": "3",
+            "concluida": false
+          }
+        ]
+      },
+      {
+        "id": "d88f44ee-0bcf-4b2d-8cb1-49d9617436c3",
+        "titulo": "test",
+        "concluida": false,
+        "descricao": "",
+        "status": "",
+        "dataInicio": "",
+        "dataPrazo": "",
+        "dataConclusao": "",
+        "subtarefas": []
+      },
+      {
+        "id": "e6cc5af4-33eb-4bec-ad07-c867b37154ba",
+        "titulo": "testeeeeeee",
+        "concluida": false,
+        "descricao": "",
+        "status": "",
+        "dataInicio": "",
+        "dataPrazo": "",
+        "dataConclusao": "",
+        "subtarefas": []
+      },
+      {
+        "id": "1557e0d7-4030-462b-92af-38c6ade0f412",
+        "titulo": "tettttttt",
+        "concluida": false,
+        "descricao": "",
+        "status": "",
+        "dataInicio": "",
+        "dataPrazo": "",
+        "dataConclusao": "",
+        "subtarefas": [
+          {
+            "id": "7043d343-84d3-4ad1-9425-c188b66d4d6e",
+            "titulo": "testeeee",
+            "concluida": false
+          }
+        ]
+      },
+      {
+        "id": "10eef3f6-4866-4991-9fec-7a7ce7316d30",
+        "titulo": "123456",
         "concluida": false,
         "descricao": "",
         "status": "",

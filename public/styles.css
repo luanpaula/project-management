@@ -79,6 +79,38 @@ header {
   height: 100%;
 }
 
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #e5e7eb; /* light gray */
+  color: #374151; /* dark text */
+  border-radius: 50%;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  margin-right: 1rem;
+}
+
+.avatar svg {
+  width: 24px;
+  height: 24px;
+}
+
+[data-theme="dark"] .avatar {
+  background-color: #374151; /* dark gray */
+  color: #f9fafb; /* light text */
+}
+
+.avatar:hover {
+  background-color: #cbd5e1; /* lighter on hover (light mode) */
+}
+
+[data-theme="dark"] .avatar:hover {
+  background-color: #4b5563;
+}
+
 /* Botões de menu */
 #menu-toggle,
 .sidebar-close {
