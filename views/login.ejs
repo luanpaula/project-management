@@ -1,0 +1,23 @@
+<link rel="stylesheet" href="/styles.css">
+
+<div class="page-center">
+  <h2 class="section-title">Login</h2>
+
+  <% if (erro) { %>
+    <p class="login-error"><%= erro %></p>
+  <% } %>
+
+  <form method="POST" action="/login" class="form-container fade-in">
+    <div class="form-group">
+      <label for="username" class="form-label">Usuário</label>
+      <input type="text" id="username" name="username" required class="form-input" />
+    </div>
+
+    <div class="form-group">
+      <label for="senha" class="form-label">Senha</label>
+      <input type="password" id="senha" name="senha" required class="form-input" />
+    </div>
+
+    <button type="submit" class="submit-btn">Entrar</button>
+  </form>
+</div>

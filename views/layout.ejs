@@ -20,7 +20,7 @@
       <button id="menu-toggle">&#9776;</button>
       <h1>Controle de Projetos</h1>
     </div>
-    <a href="#perfil" class="avatar">
+    <a href="#" id="avatar" class="avatar">
       <svg fill="currentColor" viewBox="0 0 24 24">
         <path
           d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
@@ -46,6 +46,17 @@
     <%- body %>
   </main>
 
+  <!-- Popup de perfil -->
+  <div id="profile-popup">
+    <div class="popup-header">
+      <p><strong>Usuário:</strong> <span id="popup-username"></span></p>
+    </div>
+    <div class="popup-actions">
+      <button id="view-profile">Ver Perfil</button>
+      <button id="logout">Deslogar</button>
+    </div>
+  </div>
+
   <script>
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menu-toggle');
@@ -54,7 +65,16 @@
     const sidebarClose = document.querySelector('.sidebar-close');
     const html = document.documentElement;
 
-    html.setAttribute('data-theme', 'light');
+    // Popup e Overlay
+    const profilePopup = document.getElementById('profile-popup');
+    const avatar = document.getElementById('avatar');
+    const popupUsername = document.getElementById('popup-username');
+
+    // Variável fictícia de usuário (normalmente você pegaria isso da sessão do servidor)
+    const user = { username: 'admin' }; 
+
+    // Mostrar o nome de usuário no popup
+    popupUsername.textContent = user.username;
 
     // Funções de controle do sidebar
     function openSidebar() {
@@ -72,18 +92,35 @@
     overlay.addEventListener('click', closeSidebar);
     sidebarClose.addEventListener('click', closeSidebar);
 
-    // Fecha o sidebar ao redimensionar (opcional)
-    window.addEventListener('resize', () => {
-      if (sidebar.classList.contains('active')) {
-        closeSidebar();
-      }
-    });
-
     // Alternador de tema
     themeToggle.addEventListener('click', () => {
       const currentTheme = html.getAttribute('data-theme');
       const newTheme = currentTheme === 'light' ? 'dark' : 'light';
       html.setAttribute('data-theme', newTheme);
+    });
+
+    // Exibir o popup de perfil ao clicar no avatar
+    avatar.addEventListener('click', () => {
+      profilePopup.classList.add('active');
+      overlay.classList.add('active');
+    });
+
+    // Fechar o popup se o overlay for clicado
+    overlay.addEventListener('click', () => {
+      profilePopup.classList.remove('active');
+      overlay.classList.remove('active');
+    });
+
+    // Ação de deslogar
+    document.getElementById('logout').addEventListener('click', () => {
+      // Chamada para deslogar (você pode redirecionar para a página de logout)
+      window.location.href = '/logout';
+    });
+
+    // Ação de ver perfil
+    document.getElementById('view-profile').addEventListener('click', () => {
+      // Redireciona para a página de perfil (substitua conforme necessário)
+      window.location.href = '/profile';
     });
   </script>
 </body>

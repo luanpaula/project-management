@@ -4,50 +4,86 @@ const expressLayouts = require('express-ejs-layouts');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
+const session = require('express-session');
 
 const app = express();
 const PORT = 3000;
 
-// Caminho para o arquivo JSON
+// ========== MIDDLEWARES ==========
+app.use(session({
+    secret: 'aR8fT$#9zLkP0vY@jWq1uB7eNxMgXcZ2e3tUoR!4',
+    resave: false,
+    saveUninitialized: true
+}));
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ========== CONFIGURAÇÕES ==========
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(expressLayouts);
+app.set('layout', 'layout');
+
+// ========== DADOS ==========
 const projetosPath = path.join(__dirname, 'data', 'projetos.json');
 
-app.use(express.static('public'));
+const usuarios = [
+    { username: 'admin', senha: 'admin' }
+];
 
-// Funções utilitárias
+// ========== FUNÇÕES AUXILIARES ==========
 function carregarProjetos() {
+    if (!fs.existsSync(projetosPath)) return [];
     const raw = fs.readFileSync(projetosPath, 'utf-8');
-    return JSON.parse(raw);
+    return JSON.parse(raw || '[]');
 }
 
 function salvarProjetos(projetos) {
     fs.writeFileSync(projetosPath, JSON.stringify(projetos, null, 2), 'utf-8');
 }
 
-// Configuração do Express
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-app.use(expressLayouts);
-app.set('layout', 'layout');
+function autenticar(req, res, next) {
+    if (req.session && req.session.usuario) {
+        next();
+    } else {
+        res.redirect('/login');
+    }
+}
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.json());
-
-// Rotas
-app.get('/', (req, res) => {
-    const projetos = carregarProjetos();
-    res.render('index', {
-        title: 'Lista',
-        projetos
-    });
+// ========== ROTAS DE LOGIN ==========
+app.get('/login', (req, res) => {
+    res.render('login', { title: 'Login', erro: null });
 });
 
-app.get('/create', (req, res) => {
+app.post('/login', (req, res) => {
+    const { username, senha } = req.body;
+    const usuario = usuarios.find(u => u.username === username && u.senha === senha);
+
+    if (usuario) {
+        req.session.usuario = usuario.username;
+        res.redirect('/');
+    } else {
+        res.render('login', { title: 'Login', erro: 'Usuário ou senha inválidos' });
+    }
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy(() => res.redirect('/login'));
+});
+
+// ========== ROTAS DE PROJETOS ==========
+app.get('/', autenticar, (req, res) => {
+    const projetos = carregarProjetos();
+    res.render('index', { title: 'Lista', projetos });
+});
+
+app.get('/create', autenticar, (req, res) => {
     res.render('create', { title: 'Criar Projeto' });
 });
 
-// Projetos
-app.post('/projetos', (req, res) => {
+app.post('/projetos', autenticar, (req, res) => {
     const { nome, descricao, status, dataInicio, dataPrazo, dataConclusao, tarefas } = req.body;
     const projetos = carregarProjetos();
 
@@ -59,26 +95,25 @@ app.post('/projetos', (req, res) => {
         dataInicio,
         dataPrazo,
         dataConclusao,
-        tarefas: Array.isArray(tarefas)
-            ? tarefas.map(t => ({
-                id: uuidv4(),
-                titulo: t,
-                concluida: false,
-                descricao: '',
-                status: '',
-                dataInicio: '',
-                dataPrazo: '',
-                dataConclusao: '',
-                subtarefas: []
-            }))
-            : []
+        tarefas: Array.isArray(tarefas) ? tarefas.map(t => ({
+            id: uuidv4(),
+            titulo: t,
+            concluida: false,
+            descricao: '',
+            status: '',
+            dataInicio: '',
+            dataPrazo: '',
+            dataConclusao: '',
+            subtarefas: []
+        })) : []
     };
 
     projetos.push(novoProjeto);
     salvarProjetos(projetos);
     res.redirect('/');
 });
-app.post('/projetos/novo', (req, res) => {
+
+app.post('/projetos/novo', autenticar, (req, res) => {
     const { nome } = req.body;
     const projetos = carregarProjetos();
 
@@ -97,49 +132,44 @@ app.post('/projetos/novo', (req, res) => {
     salvarProjetos(projetos);
     res.json({ sucesso: true, id: novoProjeto.id, nome: novoProjeto.nome });
 });
-app.post('/projetos/:projId', (req, res) => {
+
+app.post('/projetos/:projId', autenticar, (req, res) => {
     const { projId } = req.params;
     const { campo, valor } = req.body;
-
     let projetos = carregarProjetos();
 
-    const projeto = projetos.find(p => p.id.trim() === projId.trim());
+    const projeto = projetos.find(p => p.id === projId);
+    if (!projeto) return res.status(404).json({ error: 'Projeto não encontrado' });
 
-    if (projeto) {
-        if (campo in projeto) {
-            projeto[campo] = valor;
-            salvarProjetos(projetos);
-            return res.json(projeto);
-        }
-        return res.status(400).json({ error: 'Campo inválido' });
-    }
+    if (!(campo in projeto)) return res.status(400).json({ error: 'Campo inválido' });
 
-    return res.status(404).json({ error: 'Projeto não encontrado' });
+    projeto[campo] = valor;
+    salvarProjetos(projetos);
+    res.json(projeto);
 });
-app.delete('/projetos/:projId', (req, res) => {
-    const { projId } = req.params;
-    let projetos = carregarProjetos();
 
-    const index = projetos.findIndex(p => p.id === projId);
+app.delete('/projetos/:projId', autenticar, (req, res) => {
+    let projetos = carregarProjetos();
+    const index = projetos.findIndex(p => p.id === req.params.projId);
+
     if (index === -1) return res.status(404).json({ error: 'Projeto não encontrado' });
 
     projetos.splice(index, 1);
     salvarProjetos(projetos);
-
-    res.status(200).json({ message: 'Projeto excluído com sucesso' });
+    res.json({ message: 'Projeto excluído com sucesso' });
 });
 
-// Tarefas
-app.post('/projetos/:projId/tarefas', (req, res) => {
-    const { projId } = req.params;
+// ========== ROTAS DE TAREFAS ==========
+app.post('/projetos/:projId/tarefas', autenticar, (req, res) => {
     const { nome } = req.body;
-
-    // Validação: se o título estiver vazio, retornamos um erro 400
     if (!nome || nome.trim() === "") {
         return res.status(400).json({ error: "O título da tarefa não pode estar vazio" });
     }
 
-    // Criação da tarefa
+    const projetos = carregarProjetos();
+    const projeto = projetos.find(p => p.id === req.params.projId);
+    if (!projeto) return res.status(404).json({ error: "Projeto não encontrado" });
+
     const novaTarefa = {
         id: uuidv4(),
         titulo: nome,
@@ -152,126 +182,92 @@ app.post('/projetos/:projId/tarefas', (req, res) => {
         subtarefas: []
     };
 
-    // Carregar projetos e procurar o projeto com o id
-    let projetos = carregarProjetos();  // Supondo que carregarProjetos seja uma função que carrega os projetos do JSON
-    const projeto = projetos.find(p => p.id === projId);
-
-    if (projeto) {
-        projeto.tarefas.push(novaTarefa);  // Adiciona a nova tarefa
-        salvarProjetos(projetos);  // Salva novamente os projetos (ajuste conforme seu fluxo)
-        return res.json(novaTarefa);  // Retorna a nova tarefa como resposta
-    } else {
-        return res.status(404).json({ error: "Projeto não encontrado" });
-    }
+    projeto.tarefas.push(novaTarefa);
+    salvarProjetos(projetos);
+    res.json(novaTarefa);
 });
-app.post('/projetos/:projId/tarefas/:tarefaId', (req, res) => {
-    const { projId, tarefaId } = req.params;
+
+app.post('/projetos/:projId/tarefas/:tarefaId', autenticar, (req, res) => {
     const { campo, valor } = req.body;
     const projetos = carregarProjetos();
+    const projeto = projetos.find(p => p.id === req.params.projId);
+    if (!projeto) return res.status(404).json({ error: 'Projeto não encontrado' });
 
-    const projeto = projetos.find(p => p.id === projId);
-    if (!projeto) return res.status(404).json({ erro: "Projeto não encontrado" });
-
-    const tarefa = projeto.tarefas.find(t => t.id === tarefaId);
-    if (!tarefa) return res.status(404).json({ erro: "Tarefa não encontrada" });
+    const tarefa = projeto.tarefas.find(t => t.id === req.params.tarefaId);
+    if (!tarefa) return res.status(404).json({ error: 'Tarefa não encontrada' });
 
     tarefa[campo] = valor;
     salvarProjetos(projetos);
-
-    res.status(200).json({ sucesso: true });
+    res.json({ sucesso: true });
 });
-app.delete('/projetos/:projId/tarefas/:tarefaId', (req, res) => {
-    const { projId, tarefaId } = req.params;
-    let projetos = carregarProjetos();
 
-    const projeto = projetos.find(p => p.id === projId);
+app.delete('/projetos/:projId/tarefas/:tarefaId', autenticar, (req, res) => {
+    const projetos = carregarProjetos();
+    const projeto = projetos.find(p => p.id === req.params.projId);
     if (!projeto) return res.status(404).json({ error: 'Projeto não encontrado' });
 
-    const index = projeto.tarefas.findIndex(t => t.id === tarefaId);
+    const index = projeto.tarefas.findIndex(t => t.id === req.params.tarefaId);
     if (index === -1) return res.status(404).json({ error: 'Tarefa não encontrada' });
 
     projeto.tarefas.splice(index, 1);
     salvarProjetos(projetos);
-
-    res.status(200).json({ message: 'Tarefa excluída com sucesso' });
+    res.json({ message: 'Tarefa excluída com sucesso' });
 });
 
-// Subtarefas
-app.post('/projetos/:projId/tarefas/:tarefaId/subtarefas', (req, res) => {
-    const { projId, tarefaId } = req.params;
+// ========== ROTAS DE SUBTAREFAS ==========
+app.post('/projetos/:projId/tarefas/:tarefaId/subtarefas', autenticar, (req, res) => {
     const { titulo } = req.body;
-    const projetos = carregarProjetos()
+    const projetos = carregarProjetos();
+    const projeto = projetos.find(p => p.id === req.params.projId);
+    if (!projeto) return res.status(404).json({ error: 'Projeto não encontrado' });
 
-    console.log(`Recebendo dados para criar subtarefa: projId=${projId}, tarefaId=${tarefaId}, titulo=${titulo}`);
+    const tarefa = projeto.tarefas.find(t => t.id === req.params.tarefaId);
+    if (!tarefa) return res.status(404).json({ error: 'Tarefa não encontrada' });
 
-    const projeto = projetos.find(p => p.id === projId);
-    if (!projeto) {
-        console.log(`Projeto não encontrado: ${projId}`);
-        return res.status(404).json({ error: 'Projeto não encontrado' });
-    }
-
-    const tarefa = projeto.tarefas.find(t => t.id === tarefaId);
-    if (!tarefa) {
-        console.log(`Tarefa não encontrada: ${tarefaId}`);
-        return res.status(404).json({ error: 'Tarefa não encontrada' });
-    }
-
-    const novaSubtarefa = {
-        id: uuidv4(),
-        titulo,
-        concluida: false,
-    };
-
-    // Garante que a lista de subtarefas exista
+    const novaSubtarefa = { id: uuidv4(), titulo, concluida: false };
     tarefa.subtarefas = tarefa.subtarefas || [];
     tarefa.subtarefas.push(novaSubtarefa);
 
     salvarProjetos(projetos);
-
-    res.status(201).json(novaSubtarefa); // Retorna a subtarefa criada
+    res.status(201).json(novaSubtarefa);
 });
-app.post('/projetos/:projId/tarefas/:tarefaId/subtarefas/:subtarefaId', (req, res) => {
-    const { projId, tarefaId, subtarefaId } = req.params;
+
+app.post('/projetos/:projId/tarefas/:tarefaId/subtarefas/:subtarefaId', autenticar, (req, res) => {
     const { titulo, concluida } = req.body;
     const projetos = carregarProjetos();
-
-    const projeto = projetos.find(p => p.id === projId);
+    const projeto = projetos.find(p => p.id === req.params.projId);
     if (!projeto) return res.status(404).json({ error: 'Projeto não encontrado' });
 
-    const tarefa = projeto.tarefas.find(t => t.id === tarefaId);
+    const tarefa = projeto.tarefas.find(t => t.id === req.params.tarefaId);
     if (!tarefa) return res.status(404).json({ error: 'Tarefa não encontrada' });
 
-    const subtarefa = tarefa.subtarefas?.find(st => st.id === subtarefaId);
+    const subtarefa = tarefa.subtarefas?.find(st => st.id === req.params.subtarefaId);
     if (!subtarefa) return res.status(404).json({ error: 'Subtarefa não encontrada' });
 
-    // Atualiza apenas o que foi enviado
     if (titulo !== undefined) subtarefa.titulo = titulo;
     if (concluida !== undefined) subtarefa.concluida = concluida;
 
     salvarProjetos(projetos);
-
     res.json({ message: 'Subtarefa atualizada com sucesso', subtarefa });
 });
-app.delete('/projetos/:projId/tarefas/:tarefaId/subtarefas/:subtarefaId', (req, res) => {
-    const { projId, tarefaId, subtarefaId } = req.params;
-    let projetos = carregarProjetos();
 
-    const projeto = projetos.find(p => p.id === projId);
+app.delete('/projetos/:projId/tarefas/:tarefaId/subtarefas/:subtarefaId', autenticar, (req, res) => {
+    const projetos = carregarProjetos();
+    const projeto = projetos.find(p => p.id === req.params.projId);
     if (!projeto) return res.status(404).json({ error: 'Projeto não encontrado' });
 
-    const tarefa = projeto.tarefas.find(t => t.id === tarefaId);
+    const tarefa = projeto.tarefas.find(t => t.id === req.params.tarefaId);
     if (!tarefa) return res.status(404).json({ error: 'Tarefa não encontrada' });
 
-    const index = tarefa.subtarefas?.findIndex(st => st.id === subtarefaId);
+    const index = tarefa.subtarefas?.findIndex(st => st.id === req.params.subtarefaId);
     if (index === -1 || index === undefined) return res.status(404).json({ error: 'Subtarefa não encontrada' });
 
     tarefa.subtarefas.splice(index, 1);
     salvarProjetos(projetos);
-
-    res.status(200).json({ message: 'Subtarefa excluída com sucesso' });
+    res.json({ message: 'Subtarefa excluída com sucesso' });
 });
 
-// Iniciar servidor
+// ========== INICIAR SERVIDOR ==========
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
