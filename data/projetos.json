@@ -1,7 +1,7 @@
 [
   {
     "id": "d1de3d00-a4a8-46f2-883c-8d47629ea207",
-    "nome": "Melhoria no processo 123",
+    "nome": "Gabarito",
     "descricao": "",
     "status": "Não iniciado",
     "dataInicio": "",
@@ -9,124 +9,25 @@
     "dataConclusao": "",
     "tarefas": [
       {
-        "id": "64f35711-8bdc-4ae8-8440-9c00efed87d6",
-        "titulo": "desenhar no solid",
-        "concluida": true,
-        "descricao": "",
-        "status": "Não iniciado",
-        "dataInicio": "",
-        "dataPrazo": "2025-04-30",
-        "dataConclusao": "",
-        "subtarefas": [
-          {
-            "id": "3f98df6f-76b9-4279-ad34-916cb489b236",
-            "titulo": "item 1",
-            "concluida": false
-          },
-          {
-            "id": "da91194a-6818-4756-a248-d4f48a09a474",
-            "titulo": "item 2",
-            "concluida": true
-          }
-        ]
-      },
-      {
         "id": "a8b1dfea-467e-4cc0-8cdf-0c206bfe30a7",
-        "titulo": "montagem no solid",
-        "concluida": true,
+        "titulo": "Montagem no solid",
+        "concluida": false,
         "descricao": "",
         "status": "",
         "dataInicio": "",
         "dataPrazo": "",
         "dataConclusao": "",
-        "subtarefas": []
+        "subtarefas": [
+          {
+            "id": "8d20a50c-aa0c-4b20-855b-a3ee2e2df33b",
+            "titulo": "Esboço inicial",
+            "concluida": false
+          }
+        ]
       },
       {
         "id": "8feed143-6b2f-4a9f-984d-fc9f279f6cd7",
         "titulo": "Comprar materiais",
-        "concluida": false,
-        "descricao": "",
-        "status": "",
-        "dataInicio": "",
-        "dataPrazo": "",
-        "dataConclusao": "",
-        "subtarefas": []
-      }
-    ]
-  },
-  {
-    "id": "616fcc5d-0fe7-4ec3-a89d-f09c9db3719c",
-    "nome": "teste",
-    "descricao": "",
-    "status": "",
-    "dataInicio": "",
-    "dataPrazo": "",
-    "dataConclusao": "",
-    "tarefas": [
-      {
-        "id": "437ad4b5-d4a8-4be2-97e0-d8860679186b",
-        "titulo": "teste",
-        "concluida": false,
-        "descricao": "",
-        "status": "",
-        "dataInicio": "",
-        "dataPrazo": "",
-        "dataConclusao": "",
-        "subtarefas": [
-          {
-            "id": "15869bef-e1cf-4f2a-9b6b-40b9c894ac00",
-            "titulo": "1",
-            "concluida": false
-          },
-          {
-            "id": "6f781061-ba48-42a0-b834-6455830f18ab",
-            "titulo": "3",
-            "concluida": false
-          }
-        ]
-      },
-      {
-        "id": "d88f44ee-0bcf-4b2d-8cb1-49d9617436c3",
-        "titulo": "test",
-        "concluida": false,
-        "descricao": "",
-        "status": "",
-        "dataInicio": "",
-        "dataPrazo": "",
-        "dataConclusao": "",
-        "subtarefas": []
-      },
-      {
-        "id": "e6cc5af4-33eb-4bec-ad07-c867b37154ba",
-        "titulo": "testeeeeeee",
-        "concluida": false,
-        "descricao": "",
-        "status": "",
-        "dataInicio": "",
-        "dataPrazo": "",
-        "dataConclusao": "",
-        "subtarefas": []
-      },
-      {
-        "id": "1557e0d7-4030-462b-92af-38c6ade0f412",
-        "titulo": "tettttttt",
-        "concluida": false,
-        "descricao": "",
-        "status": "",
-        "dataInicio": "",
-        "dataPrazo": "",
-        "dataConclusao": "",
-        "subtarefas": [
-          {
-            "id": "7043d343-84d3-4ad1-9425-c188b66d4d6e",
-            "titulo": "testeeee",
-            "concluida": false
-          }
-        ]
-      },
-      {
-        "id": "10eef3f6-4866-4991-9fec-7a7ce7316d30",
-        "titulo": "123456",
         "concluida": false,
         "descricao": "",
         "status": "",

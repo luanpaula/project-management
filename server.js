@@ -46,7 +46,7 @@ app.get('/create', (req, res) => {
     res.render('create', { title: 'Criar Projeto' });
 });
 
-// Criação de projeto via formulário
+// Projetos
 app.post('/projetos', (req, res) => {
     const { nome, descricao, status, dataInicio, dataPrazo, dataConclusao, tarefas } = req.body;
     const projetos = carregarProjetos();
@@ -78,8 +78,6 @@ app.post('/projetos', (req, res) => {
     salvarProjetos(projetos);
     res.redirect('/');
 });
-
-// Criação rápida de projeto direto na tabela
 app.post('/projetos/novo', (req, res) => {
     const { nome } = req.body;
     const projetos = carregarProjetos();
@@ -99,16 +97,11 @@ app.post('/projetos/novo', (req, res) => {
     salvarProjetos(projetos);
     res.json({ sucesso: true, id: novoProjeto.id, nome: novoProjeto.nome });
 });
-
-// Edição de campos do projeto (por ID)
 app.post('/projetos/:projId', (req, res) => {
     const { projId } = req.params;
     const { campo, valor } = req.body;
 
     let projetos = carregarProjetos();
-
-    // console.log('Recebido ID:', projId);
-    // console.log('IDs no JSON:', projetos.map(p => p.id));
 
     const projeto = projetos.find(p => p.id.trim() === projId.trim());
 
@@ -123,8 +116,20 @@ app.post('/projetos/:projId', (req, res) => {
 
     return res.status(404).json({ error: 'Projeto não encontrado' });
 });
+app.delete('/projetos/:projId', (req, res) => {
+    const { projId } = req.params;
+    let projetos = carregarProjetos();
 
-// Adicionar tarefa a um projeto
+    const index = projetos.findIndex(p => p.id === projId);
+    if (index === -1) return res.status(404).json({ error: 'Projeto não encontrado' });
+
+    projetos.splice(index, 1);
+    salvarProjetos(projetos);
+
+    res.status(200).json({ message: 'Projeto excluído com sucesso' });
+});
+
+// Tarefas
 app.post('/projetos/:projId/tarefas', (req, res) => {
     const { projId } = req.params;
     const { nome } = req.body;
@@ -150,7 +155,7 @@ app.post('/projetos/:projId/tarefas', (req, res) => {
     // Carregar projetos e procurar o projeto com o id
     let projetos = carregarProjetos();  // Supondo que carregarProjetos seja uma função que carrega os projetos do JSON
     const projeto = projetos.find(p => p.id === projId);
-    
+
     if (projeto) {
         projeto.tarefas.push(novaTarefa);  // Adiciona a nova tarefa
         salvarProjetos(projetos);  // Salva novamente os projetos (ajuste conforme seu fluxo)
@@ -159,8 +164,6 @@ app.post('/projetos/:projId/tarefas', (req, res) => {
         return res.status(404).json({ error: "Projeto não encontrado" });
     }
 });
-
-// Atualizar tarefa (ex: toggle concluída)
 app.post('/projetos/:projId/tarefas/:tarefaId', (req, res) => {
     const { projId, tarefaId } = req.params;
     const { campo, valor } = req.body;
@@ -177,7 +180,23 @@ app.post('/projetos/:projId/tarefas/:tarefaId', (req, res) => {
 
     res.status(200).json({ sucesso: true });
 });
+app.delete('/projetos/:projId/tarefas/:tarefaId', (req, res) => {
+    const { projId, tarefaId } = req.params;
+    let projetos = carregarProjetos();
 
+    const projeto = projetos.find(p => p.id === projId);
+    if (!projeto) return res.status(404).json({ error: 'Projeto não encontrado' });
+
+    const index = projeto.tarefas.findIndex(t => t.id === tarefaId);
+    if (index === -1) return res.status(404).json({ error: 'Tarefa não encontrada' });
+
+    projeto.tarefas.splice(index, 1);
+    salvarProjetos(projetos);
+
+    res.status(200).json({ message: 'Tarefa excluída com sucesso' });
+});
+
+// Subtarefas
 app.post('/projetos/:projId/tarefas/:tarefaId/subtarefas', (req, res) => {
     const { projId, tarefaId } = req.params;
     const { titulo } = req.body;
@@ -211,7 +230,6 @@ app.post('/projetos/:projId/tarefas/:tarefaId/subtarefas', (req, res) => {
 
     res.status(201).json(novaSubtarefa); // Retorna a subtarefa criada
 });
-
 app.post('/projetos/:projId/tarefas/:tarefaId/subtarefas/:subtarefaId', (req, res) => {
     const { projId, tarefaId, subtarefaId } = req.params;
     const { titulo, concluida } = req.body;
@@ -233,6 +251,24 @@ app.post('/projetos/:projId/tarefas/:tarefaId/subtarefas/:subtarefaId', (req, re
     salvarProjetos(projetos);
 
     res.json({ message: 'Subtarefa atualizada com sucesso', subtarefa });
+});
+app.delete('/projetos/:projId/tarefas/:tarefaId/subtarefas/:subtarefaId', (req, res) => {
+    const { projId, tarefaId, subtarefaId } = req.params;
+    let projetos = carregarProjetos();
+
+    const projeto = projetos.find(p => p.id === projId);
+    if (!projeto) return res.status(404).json({ error: 'Projeto não encontrado' });
+
+    const tarefa = projeto.tarefas.find(t => t.id === tarefaId);
+    if (!tarefa) return res.status(404).json({ error: 'Tarefa não encontrada' });
+
+    const index = tarefa.subtarefas?.findIndex(st => st.id === subtarefaId);
+    if (index === -1 || index === undefined) return res.status(404).json({ error: 'Subtarefa não encontrada' });
+
+    tarefa.subtarefas.splice(index, 1);
+    salvarProjetos(projetos);
+
+    res.status(200).json({ message: 'Subtarefa excluída com sucesso' });
 });
 
 // Iniciar servidor

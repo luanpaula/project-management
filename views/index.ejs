@@ -183,10 +183,10 @@
       </table>
       <div id="context-menu" class="context-menu hidden">
         <ul>
-          <li onclick="copiarId()">📋 Copiar ID</li>
-          <li onclick="renomear()">✏️ Renomear</li>
-          <li onclick="duplicar()">📝 Duplicar</li>
-          <li onclick="excluir()">🗑️ Excluir</li>
+          <li onclick="copiarId()"><i class="fa fa-clipboard"></i> Copiar ID</li>
+          <li onclick="renomear()"><i class="fa fa-edit"></i> Renomear</li>
+          <li onclick="duplicar()"><i class="fa fa-copy"></i> Duplicar</li>
+          <li onclick="excluir()"><i class="fa fa-trash"></i> Excluir</li>
         </ul>
       </div>
     </div>
@@ -197,7 +197,6 @@
         const icon = document.getElementById(`icone-${projId}`);
         row.classList.toggle('hidden');
         icon.textContent = row.classList.contains('hidden') ? '▸' : '▾';
-        console.log(projId);
       }
 
       function toggleSubtarefas(projId, tarefaId) {
@@ -207,7 +206,6 @@
 
         subtarefaTable.classList.toggle("hidden", !isHidden);
         icone.textContent = isHidden ? "▾" : "▸";
-        console.log(tarefaId);
       }
 
 
@@ -221,7 +219,9 @@
             if (!res.ok) throw new Error("Erro ao marcar tarefa");
             return res.json();
           })
-          .then(() => console.log("Status da tarefa atualizado"))
+          .then(() => {
+            mostrarPopup("Status da tarefa atualizado");
+          })
           .catch(err => console.error(err));
       }
 
@@ -236,14 +236,14 @@
             return res.json();
           })
           .then(data => {
-            console.log("Subtarefa atualizada:", data);
+            mostrarPopup("Status da subtarefa atualizado");
           })
           .catch(err => {
             console.error("Erro ao atualizar subtarefa:", err);
           });
       }
 
-      function atualizarItem({ tipo, projetoId, tarefaId, subtarefaId, campo, valor }) {
+      function atualizarItem({ tipo, projetoId, tarefaId, subtarefaId, campo, valor, onSuccess }) {
         let url = '';
         let body = {};
         let mensagemSucesso = '';
@@ -256,21 +256,18 @@
             mensagemSucesso = 'Projeto atualizado';
             mensagemErro = 'Erro ao atualizar projeto';
             break;
-
           case 'tarefa':
             url = `/projetos/${projetoId}/tarefas/${tarefaId}`;
             body = { campo, valor };
             mensagemSucesso = 'Tarefa atualizada';
             mensagemErro = 'Erro ao atualizar tarefa';
             break;
-
           case 'subtarefa':
             url = `/projetos/${projetoId}/tarefas/${tarefaId}/subtarefas/${subtarefaId}`;
             body = { titulo: valor };
             mensagemSucesso = 'Subtarefa atualizada';
             mensagemErro = 'Erro ao atualizar subtarefa';
             break;
-
           default:
             console.warn('Tipo de entidade desconhecido:', tipo);
             return;
@@ -281,8 +278,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         })
-          .then(res => res.json())
-          .then(() => mostrarPopup(mensagemSucesso))
+          .then(res => {
+            if (!res.ok) throw new Error();
+            return res.json();
+          })
+          .then(() => {
+            mostrarPopup(mensagemSucesso);
+            if (onSuccess) onSuccess();
+          })
           .catch(err => {
             console.error('Erro:', err);
             mostrarPopup(mensagemErro, 'erro');
@@ -300,6 +303,25 @@
           });
         });
       }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('input[type="checkbox"].auto-save').forEach(cb => {
+          cb.addEventListener('change', () => {
+            const tipo = cb.dataset.tipo;
+            const projetoId = cb.dataset.projetoId;
+            const tarefaId = cb.dataset.tarefaId;
+            const subtarefaId = cb.dataset.subtarefaId;
+            const marcado = cb.checked;
+
+            if (tipo === 'tarefa') {
+              concluirTarefa(projetoId, tarefaId, marcado);
+            } else if (tipo === 'subtarefa') {
+              concluirSubtarefa(projetoId, tarefaId, subtarefaId, marcado);
+            }
+          });
+        });
+      });
+
       configAutoSave();
 
       function salvarInput(event) {
@@ -336,11 +358,6 @@
         const subtarefaId = input.dataset.subtarefaId;
         const campo = input.dataset?.campo || input.getAttribute('data-campo');
 
-        console.log("id:", projetoId || tarefaId || subtarefaId);
-        console.log("campo:", campo);
-        console.log("valor anterior:", valorAnterior);
-        console.log("valor novo:", valor);
-
         let tipo = '';
         if (tr.classList.contains('project-row')) {
           tipo = 'projeto';
@@ -356,7 +373,20 @@
           tarefaId,
           subtarefaId,
           campo,
-          valor
+          valor,
+          onSuccess: () => {
+            if (input.type === 'checkbox') {
+              input.defaultChecked = input.checked;
+            } else {
+              input.defaultValue = valor;
+              if (input.tagName === 'SELECT') {
+                const options = input.querySelectorAll('option');
+                options.forEach(opt => opt.removeAttribute('selected'));
+                const selected = input.querySelector(`option[value="${valor}"]`);
+                if (selected) selected.setAttribute('selected', true);
+              }
+            }
+          }
         });
       }
 
@@ -596,6 +626,142 @@
           .catch(err => {
             console.error("Erro ao criar subtarefa:", err);
           });
+      }
+
+      let contextTarget = null;
+
+      document.addEventListener('contextmenu', function (e) {
+        const linha = e.target.closest('.project-row, .task-row, .subtask-row');
+        if (!linha) return;
+
+        e.preventDefault();
+        contextTarget = linha;
+
+        const menu = document.getElementById('context-menu');
+
+        // Mostrar temporariamente para medir
+        menu.classList.remove('hidden');
+        menu.style.visibility = 'hidden';
+        menu.style.top = '0';
+        menu.style.left = '0';
+
+        const menuWidth = menu.offsetWidth;
+        const menuHeight = menu.offsetHeight;
+        menu.style.visibility = 'visible';
+
+        let posX = e.clientX + window.scrollX;
+        let posY = e.clientY + window.scrollY;
+
+        if (posX + menuWidth > window.innerWidth + window.scrollX) {
+          posX = window.innerWidth + window.scrollX - menuWidth;
+        }
+        if (posY + menuHeight > window.innerHeight + window.scrollY) {
+          posY = window.innerHeight + window.scrollY - menuHeight;
+        }
+
+        menu.style.left = `${posX - 127}px`;
+        menu.style.top = `${posY - 135}px`;
+      });
+
+      // Fecha o menu ao clicar fora
+      document.addEventListener('click', function (e) {
+        const menu = document.getElementById('context-menu');
+        if (!menu.contains(e.target)) {
+          menu.classList.add('hidden');
+        }
+      });
+
+      // Fecha com tecla Esc
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          document.getElementById('context-menu').classList.add('hidden');
+        }
+      });
+
+      function copiarId() {
+        const id = contextTarget?.dataset?.projetoId || contextTarget?.dataset?.tarefaId || contextTarget?.dataset?.subtarefaId;
+        if (id) {
+          navigator.clipboard.writeText(id)
+            .then(() => mostrarPopup('ID copiado para a área de transferência'))
+            .catch(() => mostrarPopup('Erro ao copiar ID', 'erro'));
+        }
+        document.getElementById('context-menu').classList.add('hidden')
+      }
+
+      function renomear() {
+        const input = contextTarget.querySelector('input[type="text"]');
+        if (input) {
+          input.focus();
+          input.select();
+        }
+        document.getElementById('context-menu').classList.add('hidden')
+      }
+
+      function duplicar() {
+        // Exemplo: apenas clona visualmente (você pode integrar com backend se desejar)
+        const clone = contextTarget.cloneNode(true);
+        contextTarget.parentNode.insertBefore(clone, contextTarget.nextSibling);
+        mostrarPopup('Item duplicado (apenas visualmente)');
+        document.getElementById('context-menu').classList.add('hidden')
+      }
+
+      function excluir() {
+        const confirmado = confirm("Tem certeza que deseja excluir?");
+        if (!confirmado || !contextTarget) return;
+
+        const tipo = contextTarget.dataset.tipo || (
+          contextTarget.classList.contains('project-row') ? 'projeto' :
+            contextTarget.classList.contains('task-row') ? 'tarefa' :
+              contextTarget.classList.contains('subtask-row') ? 'subtarefa' : null
+        );
+
+        const projetoId = contextTarget.querySelector('[data-projeto-id]')?.dataset.projetoId;
+        const tarefaId = contextTarget.querySelector('[data-tarefa-id]')?.dataset.tarefaId;
+        const subtarefaId = contextTarget.querySelector('[data-subtarefa-id]')?.dataset.subtarefaId;
+
+        // Recolher se necessário antes de excluir
+        if (tipo === 'projeto') {
+          const tarefasRow = document.getElementById(`tarefas-${projetoId}`);
+          if (tarefasRow && !tarefasRow.classList.contains('hidden')) {
+            toggleTarefas(projetoId); // Recolhe tarefas
+          }
+        }
+
+        if (tipo === 'tarefa') {
+          const subtarefasRow = document.getElementById(`subtarefas-${projetoId}-${tarefaId}`);
+          if (subtarefasRow && !subtarefasRow.classList.contains('hidden')) {
+            toggleSubtarefas(projetoId, tarefaId); // Recolhe subtarefas
+          }
+        }
+
+        let url = '';
+        switch (tipo) {
+          case 'projeto':
+            url = `/projetos/${projetoId}`;
+            break;
+          case 'tarefa':
+            url = `/projetos/${projetoId}/tarefas/${tarefaId}`;
+            break;
+          case 'subtarefa':
+            url = `/projetos/${projetoId}/tarefas/${tarefaId}/subtarefas/${subtarefaId}`;
+            break;
+          default:
+            alert("Tipo de item desconhecido.");
+            return;
+        }
+
+        fetch(url, { method: 'DELETE' })
+          .then(res => {
+            if (!res.ok) throw new Error("Falha ao excluir");
+            contextTarget.remove(); // Só a linha alvo, pois as demais estão escondidas
+            mostrarPopup("Item removido");
+          })
+          .catch(err => {
+            console.error(err);
+            mostrarPopup("Erro ao excluir", "erro");
+          });
+
+        document.getElementById('context-menu').classList.add('hidden');
       }
     </script>
     <% } %>
