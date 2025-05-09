@@ -20,6 +20,31 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use((req, res, next) => {
+    if (req.session.usuario) {
+        res.locals.usuario = usuarios.find(u => u.username === req.session.usuario);
+    } else {
+        res.locals.usuario = null;
+    }
+    next();
+});
+
+app.use((req, res, next) => {
+    const sessionUser = req.session.usuario;
+    if (sessionUser) {
+        const usuario = usuarios.find(u => u.username === sessionUser.username);
+        if (usuario) {
+            usuario.temImagem = verificarImagemPerfil(usuario);
+            res.locals.usuario = usuario;
+        } else {
+            res.locals.usuario = null;
+        }
+    } else {
+        res.locals.usuario = null;
+    }
+    next();
+});
+
 // ========== CONFIGURAÇÕES ==========
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -30,7 +55,32 @@ app.set('layout', 'layout');
 const projetosPath = path.join(__dirname, 'data', 'projetos.json');
 
 const usuarios = [
-    { username: 'admin', senha: 'admin' }
+    {
+        id: 1,
+        username: 'admin',
+        name: 'Administrator',
+        email: 'luan.paula@lumicenter.com',
+        birthdate: '2000-09-11', // ISO 8601
+        password: 'admin',
+        phone: '+55 11 9876-5432',
+        role: 'admin',
+        profilePictureUrl: '/images/0001-avatar.jpg',
+        createdAt: '2024-05-09T12:00:00Z',
+        lastLogin: '2025-05-09T08:45:00Z'
+    },
+    {
+        id: 2,
+        username: 'thiago.carlos',
+        name: 'Thiago Morais Carlos',
+        email: 'thiago.carlos@lumicenter.com',
+        birthdate: '2000-09-11', // ISO 8601
+        password: '1234',
+        phone: '+55 11 9876-5432',
+        role: 'user',
+        profilePictureUrl: '/images/0002-avatar.jpg',
+        createdAt: '2024-05-09T12:00:00Z',
+        lastLogin: '2025-05-09T08:45:00Z'
+    }
 ];
 
 // ========== FUNÇÕES AUXILIARES ==========
@@ -52,20 +102,42 @@ function autenticar(req, res, next) {
     }
 }
 
+function verificarImagemPerfil(usuario) {
+    const avatarPath = path.join(__dirname, 'public', 'images', `${String(usuario.id).padStart(5, '0')}-avatar.jpg`);
+    return fs.existsSync(avatarPath);
+}
+
 // ========== ROTAS DE LOGIN ==========
 app.get('/login', (req, res) => {
-    res.render('login', { title: 'Login', erro: null });
+    if (req.session.user) {
+        return res.redirect('/');
+    }
+
+    res.render('login', {
+        title: 'Login',
+        erro: null,
+        layout: false
+    });
 });
 
 app.post('/login', (req, res) => {
-    const { username, senha } = req.body;
-    const usuario = usuarios.find(u => u.username === username && u.senha === senha);
+    const { username, password } = req.body;
+    const usuario = usuarios.find(u => u.username === username && u.password === password);
 
     if (usuario) {
-        req.session.usuario = usuario.username;
+        req.session.usuario = {
+            id: usuario.id,
+            username: usuario.username,
+            name: usuario.name,
+            role: usuario.role
+        };
         res.redirect('/');
     } else {
-        res.render('login', { title: 'Login', erro: 'Usuário ou senha inválidos' });
+        res.render('login', {
+            title: 'Login',
+            erro: 'Usuário ou senha inválidos',
+            layout: false
+        });
     }
 });
 

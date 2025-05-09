@@ -6,3 +6,6 @@
 - v1.0.3:
   Adicionado a tela de login, agora o usuario nao consegue executar nenhuma ação caso não esteja logado.
   Usuários estão cadastrados somente no backend server.js.
+- v1.0.4:
+  Adicionado suporte a imagem do usuário.
+  Correções no popup do usuário.

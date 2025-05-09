@@ -9,6 +9,61 @@
   </title>
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <style>
+    #profile-popup {
+      display: none;
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px 20px;
+      width: 200px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
+
+    #profile-popup.active {
+      display: block;
+    }
+
+    #profile-popup .popup-header {
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    /* Estilo do botão */
+    .popup-btn {
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      transition: var(--transition);
+    }
+
+    .popup-btn:hover {
+      color: var(--primary-dark);
+    }
+
+    /* Fundo semi-transparente do overlay */
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    #overlay.active {
+      display: block;
+    }
+  </style>
 </head>
 
 <body>
@@ -17,15 +72,25 @@
 
   <header>
     <div class="header-content">
-      <button id="menu-toggle">&#9776;</button>
+      <button id="menu-toggle">☰</button>
       <h1>Controle de Projetos</h1>
+
+      <% if (usuario) { %>
+        <a href="#" id="avatar" class="avatar"
+          style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; margin-left: auto;">
+          <% if (usuario.temImagem) { %>
+            <img src="/images/<%= usuario.id.toString().padStart(5, '0') %>-avatar.jpg" alt="Avatar de <%= usuario.name %>"
+              style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
+            <% } else { %>
+              <svg fill="currentColor" viewBox="0 0 24 24" style="width: 40px; height: 40px;">
+                <path
+                  d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z">
+                </path>
+              </svg>
+              <% } %>
+        </a>
+        <% } %>
     </div>
-    <a href="#" id="avatar" class="avatar">
-      <svg fill="currentColor" viewBox="0 0 24 24">
-        <path
-          d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
-      </svg>
-    </a>
   </header>
 
   <aside id="sidebar">
@@ -49,80 +114,76 @@
   <!-- Popup de perfil -->
   <div id="profile-popup">
     <div class="popup-header">
-      <p><strong>Usuário:</strong> <span id="popup-username"></span></p>
+      <p><span id="popup-username"><%= usuario.name %></span></p>
+      <button class="add-task-btn" onclick="copy()"><%= usuario.email %></button>
     </div>
     <div class="popup-actions">
-      <button id="view-profile">Ver Perfil</button>
-      <button id="logout">Deslogar</button>
+      <button id="view-profile" class="popup-btn">Ver Perfil</button>
+      <button id="logout" class="popup-btn">Deslogar</button>
     </div>
   </div>
 
   <script>
-    const sidebar = document.getElementById('sidebar');
-    const menuToggle = document.getElementById('menu-toggle');
-    const overlay = document.getElementById('overlay');
-    const themeToggle = document.getElementById('theme-toggle');
-    const sidebarClose = document.querySelector('.sidebar-close');
-    const html = document.documentElement;
+    document.addEventListener('DOMContentLoaded', () => {
+      const sidebar = document.getElementById('sidebar');
+      const menuToggle = document.getElementById('menu-toggle');
+      const overlay = document.getElementById('overlay');
+      const themeToggle = document.getElementById('theme-toggle');
+      const sidebarClose = document.querySelector('.sidebar-close');
+      const avatar = document.getElementById('avatar');
+      const profilePopup = document.getElementById('profile-popup');
+      const logoutBtn = document.getElementById('logout');
+      const viewProfileBtn = document.getElementById('view-profile');
+      const html = document.documentElement;
 
-    // Popup e Overlay
-    const profilePopup = document.getElementById('profile-popup');
-    const avatar = document.getElementById('avatar');
-    const popupUsername = document.getElementById('popup-username');
+      // Abrir e fechar sidebar
+      if (menuToggle && overlay && sidebar) {
+        menuToggle.addEventListener('click', () => {
+          sidebar.classList.add('active');
+          overlay.classList.add('active');
+        });
 
-    // Variável fictícia de usuário (normalmente você pegaria isso da sessão do servidor)
-    const user = { username: 'admin' }; 
+        sidebarClose?.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          overlay.classList.remove('active');
+        });
 
-    // Mostrar o nome de usuário no popup
-    popupUsername.textContent = user.username;
+        overlay.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          profilePopup?.classList.remove('active');
+          overlay.classList.remove('active');
+        });
+      }
 
-    // Funções de controle do sidebar
-    function openSidebar() {
-      sidebar.classList.add('active');
-      overlay.classList.add('active');
-    }
+      // Alternar tema
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const currentTheme = html.getAttribute('data-theme');
+          const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+          html.setAttribute('data-theme', newTheme);
+        });
+      }
 
-    function closeSidebar() {
-      sidebar.classList.remove('active');
-      overlay.classList.remove('active');
-    }
+      // Exibir popup de perfil
+      if (avatar && profilePopup && overlay) {
+        avatar.addEventListener('click', (e) => {
+          e.preventDefault();
+          profilePopup.classList.add('active');
+          overlay.classList.add('active');
+        });
+      }
 
-    // Event listeners
-    menuToggle.addEventListener('click', openSidebar);
-    overlay.addEventListener('click', closeSidebar);
-    sidebarClose.addEventListener('click', closeSidebar);
+      // Botões do popup
+      logoutBtn?.addEventListener('click', () => {
+        window.location.href = '/logout';
+      });
 
-    // Alternador de tema
-    themeToggle.addEventListener('click', () => {
-      const currentTheme = html.getAttribute('data-theme');
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      html.setAttribute('data-theme', newTheme);
-    });
-
-    // Exibir o popup de perfil ao clicar no avatar
-    avatar.addEventListener('click', () => {
-      profilePopup.classList.add('active');
-      overlay.classList.add('active');
-    });
-
-    // Fechar o popup se o overlay for clicado
-    overlay.addEventListener('click', () => {
-      profilePopup.classList.remove('active');
-      overlay.classList.remove('active');
-    });
-
-    // Ação de deslogar
-    document.getElementById('logout').addEventListener('click', () => {
-      // Chamada para deslogar (você pode redirecionar para a página de logout)
-      window.location.href = '/logout';
-    });
-
-    // Ação de ver perfil
-    document.getElementById('view-profile').addEventListener('click', () => {
-      // Redireciona para a página de perfil (substitua conforme necessário)
-      window.location.href = '/profile';
+      viewProfileBtn?.addEventListener('click', () => {
+        window.location.href = '/perfil';
+      });
     });
   </script>
+
 </body>
 
 </html>

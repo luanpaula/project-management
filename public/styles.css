@@ -74,9 +74,17 @@ header {
 
 .header-content {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1.5rem;
-  height: 100%;
+  width: 100%;
+}
+
+#avatar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  margin-left: auto;  /* Isso garante o alinhamento à direita */
 }
 
 .avatar {
@@ -800,14 +808,16 @@ h2 {
 #profile-popup {
   display: none;
   position: fixed;
-  top: 20%;
-  left: 50%;
+  top: 65px;
+  right: -120px;
   transform: translateX(-50%);
   background-color: white;
   border: 1px solid #ddd;
   border-radius: 8px;
   padding: 20px;
   width: 300px;
+  min-width: 250px;
+  max-width: 300px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
 }
