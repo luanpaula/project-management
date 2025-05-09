@@ -1,6 +1,9 @@
-agora quero trocar o campo de status de textinput para um dropdown customizado (modo claro e escuro), altere e estilize por gentileza, com um botao de adicionar status, cada status deve ter sua cor inicial (um círculo ao lado esquerdo do texto cores pasteis e suaves):
-não iniciado: cinza
-aguardando: amarelo
-em andamento: azul claro
-concluído: verde
-cancelado: vermelho
+- v1.0.1:
+  Desenvolvimento inicial, funções básicas.
+
+- v1.0.2:
+  Corrigido alterações nos status de tarefas e subtarefas que não eram salvos no banco de dados JSON.
+  Adicionado a mensagem popup para alterações em inputs do tipo checkbox.
+
+  - v1.0.3:
+  A
