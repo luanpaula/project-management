@@ -4,3 +4,5 @@
   Corrigido alterações nos status de tarefas e subtarefas que não eram salvos no banco de dados JSON.
   Adicionado a mensagem popup para alterações em inputs do tipo checkbox.
 - v1.0.3:
+  Adicionado a tela de login, agora o usuario nao consegue executar nenhuma ação caso não esteja logado.
+  Usuários estão cadastrados somente no backend server.js.
