@@ -9,3 +9,5 @@
 - v1.0.4:
   Adicionado suporte a imagem do usuário.
   Correções no popup do usuário.
+- v1.0.5:
+  Adição de edição do perfil de usuário, desde nome, email, telefone, até senha.

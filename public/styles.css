@@ -84,7 +84,8 @@ header {
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
-  margin-left: auto;  /* Isso garante o alinhamento à direita */
+  margin-left: auto;
+  /* Isso garante o alinhamento à direita */
 }
 
 .avatar {
@@ -93,8 +94,8 @@ header {
   justify-content: center;
   width: 40px;
   height: 40px;
-  background-color: #e5e7eb; /* light gray */
-  color: #374151; /* dark text */
+  background-color: #e5e7eb;
+  color: #374151;
   border-radius: 50%;
   text-decoration: none;
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -106,13 +107,75 @@ header {
   height: 24px;
 }
 
+.form-avatar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.avatar-label {
+  cursor: pointer;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.avatar-wrapper img,
+.avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 2px solid #ccc;
+}
+
+.avatar-placeholder {
+  background-color: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #666;
+}
+
+.edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.avatar-wrapper:hover .edit-overlay {
+  opacity: 1;
+}
+
 [data-theme="dark"] .avatar {
-  background-color: #374151; /* dark gray */
-  color: #f9fafb; /* light text */
+  background-color: #374151;
+  /* dark gray */
+  color: #f9fafb;
+  /* light text */
 }
 
 .avatar:hover {
-  background-color: #cbd5e1; /* lighter on hover (light mode) */
+  background-color: #cbd5e1;
+  /* lighter on hover (light mode) */
 }
 
 [data-theme="dark"] .avatar:hover {
@@ -271,7 +334,8 @@ main {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: rgba(240, 240, 240, 0.9); /* Claro por padrão */
+  background-color: rgba(240, 240, 240, 0.9);
+  /* Claro por padrão */
   color: #333;
   padding: 12px 16px;
   border-radius: 8px;
@@ -331,7 +395,8 @@ thead tr {
   background-color: var(--primary-dark);
 }
 
-th, td {
+th,
+td {
   padding: 1rem;
   text-align: left;
   border-bottom: 1px solid var(--gray-light);
@@ -530,7 +595,12 @@ button {
 }
 
 /* Tipografia */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin-bottom: 1rem;
   line-height: 1.2;
 }
@@ -640,7 +710,8 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px; /* espaço entre header e inputs */
+  margin-bottom: 8px;
+  /* espaço entre header e inputs */
 }
 
 .form-label {
@@ -662,6 +733,10 @@ h2 {
   outline: none;
   border-color: var(--primary);
   background-color: rgba(22, 110, 140, 0.05);
+}
+
+.input-error {
+  border: 2px solid rgb(190, 13, 13);
 }
 
 /* Dark Mode ajustes */
@@ -734,7 +809,8 @@ h2 {
 .tarefa-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px; /* espaçamento entre input e botão */
+  gap: 8px;
+  /* espaçamento entre input e botão */
   margin-bottom: 8px;
 }
 
@@ -753,13 +829,16 @@ h2 {
 
 /* Ícone Font Awesome */
 .remove-btn i {
-  font-size: 18px; /* Ajustando o tamanho */
-  color: #6B7280; /* Cinza claro */
+  font-size: 18px;
+  /* Ajustando o tamanho */
+  color: #6B7280;
+  /* Cinza claro */
   transition: color 0.3s ease;
 }
 
 .remove-btn:hover i {
-  color: #9e3b3b; /* Um tom de cinza mais escuro ao passar o mouse */
+  color: #9e3b3b;
+  /* Um tom de cinza mais escuro ao passar o mouse */
 }
 
 

@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "name": "Administrator",
+    "email": "luan.paula@lumicenter.com",
+    "birthdate": "2000-09-11",
+    "password": "$2b$10$qbdwHPilfhNhthFRno3h3udUAUDMddg2WVCaERmzFMCXEmRcHEDRy",
+    "phone": "+55 11 9876-5432",
+    "role": "admin",
+    "profilePictureUrl": "/images/00001-avatar.jpg",
+    "createdAt": "2024-05-09T12:00:00Z",
+    "lastLogin": "2025-05-09T08:45:00Z"
+  },
+  {
+    "id": 2,
+    "username": "thiago.carlos",
+    "name": "Thiago Morais Carlos",
+    "email": "thiago.carlos@lumicenter.com",
+    "birthdate": "1997-05-23",
+    "password": "$2b$10$OzZ5o38/U2kTBX9r1JdRvuUPzLxMm3rFIF36umvTdb5u8SsocVMI6",
+    "phone": "+55 11 9876-5432",
+    "role": "user",
+    "profilePictureUrl": "/images/00002-avatar.jpg",
+    "createdAt": "2024-05-09T12:00:00Z",
+    "lastLogin": "2025-05-09T08:45:00Z",
+    "temImagem": true
+  }
+]

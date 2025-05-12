@@ -5,11 +5,20 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const session = require('express-session');
+const multer = require('multer');
+
+const PROFILE_IMG_DIR = 'U:/Producao/SJP/Engenharia de Processos/Desenhos e modelagem 3D/Projeto Luan/projects/profile';
 
 const app = express();
 const PORT = 3000;
 
-// ========== MIDDLEWARES ==========
+// ========= CONFIGURAÇÕES =========
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(expressLayouts);
+app.set('layout', 'layout');
+
+// ========= MIDDLEWARES =========
 app.use(session({
     secret: 'aR8fT$#9zLkP0vY@jWq1uB7eNxMgXcZ2e3tUoR!4',
     resave: false,
@@ -20,70 +29,20 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((req, res, next) => {
-    if (req.session.usuario) {
-        res.locals.usuario = usuarios.find(u => u.username === req.session.usuario);
-    } else {
-        res.locals.usuario = null;
-    }
-    next();
-});
-
-app.use((req, res, next) => {
-    const sessionUser = req.session.usuario;
-    if (sessionUser) {
-        const usuario = usuarios.find(u => u.username === sessionUser.username);
-        if (usuario) {
-            usuario.temImagem = verificarImagemPerfil(usuario);
-            res.locals.usuario = usuario;
-        } else {
-            res.locals.usuario = null;
-        }
-    } else {
-        res.locals.usuario = null;
-    }
-    next();
-});
-
-// ========== CONFIGURAÇÕES ==========
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-app.use(expressLayouts);
-app.set('layout', 'layout');
-
-// ========== DADOS ==========
+// ========= DADOS =========
 const projetosPath = path.join(__dirname, 'data', 'projetos.json');
+const usuariosPath = path.join(__dirname, 'data', 'usuarios.json');
 
-const usuarios = [
-    {
-        id: 1,
-        username: 'admin',
-        name: 'Administrator',
-        email: 'luan.paula@lumicenter.com',
-        birthdate: '2000-09-11', // ISO 8601
-        password: 'admin',
-        phone: '+55 11 9876-5432',
-        role: 'admin',
-        profilePictureUrl: '/images/0001-avatar.jpg',
-        createdAt: '2024-05-09T12:00:00Z',
-        lastLogin: '2025-05-09T08:45:00Z'
-    },
-    {
-        id: 2,
-        username: 'thiago.carlos',
-        name: 'Thiago Morais Carlos',
-        email: 'thiago.carlos@lumicenter.com',
-        birthdate: '2000-09-11', // ISO 8601
-        password: '1234',
-        phone: '+55 11 9876-5432',
-        role: 'user',
-        profilePictureUrl: '/images/0002-avatar.jpg',
-        createdAt: '2024-05-09T12:00:00Z',
-        lastLogin: '2025-05-09T08:45:00Z'
-    }
-];
+function carregarUsuarios() {
+    if (!fs.existsSync(usuariosPath)) return [];
+    const raw = fs.readFileSync(usuariosPath, 'utf-8');
+    return JSON.parse(raw || '[]');
+}
 
-// ========== FUNÇÕES AUXILIARES ==========
+function salvarUsuarios(usuarios) {
+    fs.writeFileSync(usuariosPath, JSON.stringify(usuarios, null, 2), 'utf-8');
+}
+
 function carregarProjetos() {
     if (!fs.existsSync(projetosPath)) return [];
     const raw = fs.readFileSync(projetosPath, 'utf-8');
@@ -107,9 +66,27 @@ function verificarImagemPerfil(usuario) {
     return fs.existsSync(avatarPath);
 }
 
-// ========== ROTAS DE LOGIN ==========
+// ========= USUÁRIOS =========
+let usuarios = carregarUsuarios();
+
+app.use((req, res, next) => {
+    if (req.session.usuario) {
+        const usuario = usuarios.find(u => u.username === req.session.usuario.username);
+        if (usuario) {
+            usuario.temImagem = verificarImagemPerfil(usuario);
+            res.locals.usuario = usuario;
+        } else {
+            res.locals.usuario = null;
+        }
+    } else {
+        res.locals.usuario = null;
+    }
+    next();
+});
+
+// ========= ROTAS DE LOGIN =========
 app.get('/login', (req, res) => {
-    if (req.session.user) {
+    if (req.session.usuario) {
         return res.redirect('/');
     }
 
@@ -120,32 +97,60 @@ app.get('/login', (req, res) => {
     });
 });
 
-app.post('/login', (req, res) => {
+const bcrypt = require('bcrypt');
+
+
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    const usuario = usuarios.find(u => u.username === username && u.password === password);
+    const usuario = usuarios.find(u => u.username === username);
 
     if (usuario) {
-        req.session.usuario = {
-            id: usuario.id,
-            username: usuario.username,
-            name: usuario.name,
-            role: usuario.role
-        };
-        res.redirect('/');
-    } else {
-        res.render('login', {
-            title: 'Login',
-            erro: 'Usuário ou senha inválidos',
-            layout: false
-        });
+        const senhaCorreta = await bcrypt.compare(password, usuario.password);
+
+        if (senhaCorreta) {
+            // Login com senha hash OK
+            req.session.usuario = {
+                id: usuario.id,
+                username: usuario.username,
+                name: usuario.name,
+                role: usuario.role
+            };
+            return res.redirect('/');
+        }
+
+        // Tenta como senha em texto puro (usuário antigo)
+        if (usuario.password === password) {
+            // Atualiza a senha para o formato criptografado
+            const hashedPassword = await bcrypt.hash(password, 10);
+            usuario.password = hashedPassword;
+
+            // Salva no banco/arquivo
+            salvarUsuarios(usuarios);
+
+            // Continua com o login
+            req.session.usuario = {
+                id: usuario.id,
+                username: usuario.username,
+                name: usuario.name,
+                role: usuario.role
+            };
+            return res.redirect('/');
+        }
     }
+
+    // Falha geral
+    res.render('login', {
+        title: 'Login',
+        erro: 'Usuário ou senha inválidos',
+        layout: false
+    });
 });
 
 app.get('/logout', (req, res) => {
     req.session.destroy(() => res.redirect('/login'));
 });
 
-// ========== ROTAS DE PROJETOS ==========
+// ========= ROTAS DE PROJETOS =========
 app.get('/', autenticar, (req, res) => {
     const projetos = carregarProjetos();
     res.render('index', { title: 'Lista', projetos });
@@ -206,11 +211,9 @@ app.post('/projetos/novo', autenticar, (req, res) => {
 });
 
 app.post('/projetos/:projId', autenticar, (req, res) => {
-    const { projId } = req.params;
     const { campo, valor } = req.body;
-    let projetos = carregarProjetos();
-
-    const projeto = projetos.find(p => p.id === projId);
+    const projetos = carregarProjetos();
+    const projeto = projetos.find(p => p.id === req.params.projId);
     if (!projeto) return res.status(404).json({ error: 'Projeto não encontrado' });
 
     if (!(campo in projeto)) return res.status(400).json({ error: 'Campo inválido' });
@@ -221,9 +224,8 @@ app.post('/projetos/:projId', autenticar, (req, res) => {
 });
 
 app.delete('/projetos/:projId', autenticar, (req, res) => {
-    let projetos = carregarProjetos();
+    const projetos = carregarProjetos();
     const index = projetos.findIndex(p => p.id === req.params.projId);
-
     if (index === -1) return res.status(404).json({ error: 'Projeto não encontrado' });
 
     projetos.splice(index, 1);
@@ -231,7 +233,7 @@ app.delete('/projetos/:projId', autenticar, (req, res) => {
     res.json({ message: 'Projeto excluído com sucesso' });
 });
 
-// ========== ROTAS DE TAREFAS ==========
+// ========= ROTAS DE TAREFAS =========
 app.post('/projetos/:projId/tarefas', autenticar, (req, res) => {
     const { nome } = req.body;
     if (!nome || nome.trim() === "") {
@@ -286,7 +288,7 @@ app.delete('/projetos/:projId/tarefas/:tarefaId', autenticar, (req, res) => {
     res.json({ message: 'Tarefa excluída com sucesso' });
 });
 
-// ========== ROTAS DE SUBTAREFAS ==========
+// ========= ROTAS DE SUBTAREFAS =========
 app.post('/projetos/:projId/tarefas/:tarefaId/subtarefas', autenticar, (req, res) => {
     const { titulo } = req.body;
     const projetos = carregarProjetos();
@@ -339,7 +341,48 @@ app.delete('/projetos/:projId/tarefas/:tarefaId/subtarefas/:subtarefaId', autent
     res.json({ message: 'Subtarefa excluída com sucesso' });
 });
 
-// ========== INICIAR SERVIDOR ==========
+// ========= ROTAS DE PERFIL =========
+const upload = multer({ dest: path.join(__dirname, 'public/images') });
+
+app.get('/profile', autenticar, (req, res) => {
+    const usuario = usuarios.find(u => u.username === req.session.usuario.username);
+    res.render('editprofile', { title: 'Editar Perfil', usuario });
+});
+
+app.post('/profile', upload.single('imagem'), async (req, res) => {
+    const { name, email, phone, birthdate, confirmPassword } = req.body;
+    const usuario = usuarios.find(u => u.username === req.session.usuario.username);
+
+    if (usuario) {
+        usuario.name = name;
+        usuario.email = email;
+        usuario.phone = phone;
+        usuario.birthdate = birthdate;
+
+        if (confirmPassword) {
+            const hashedPassword = await bcrypt.hash(confirmPassword, 10);
+            usuario.password = hashedPassword;
+        }
+
+        if (req.file) {
+            const newFilename = `${String(usuario.id).padStart(5, '0')}-avatar.jpg`;
+            const newPath = path.join(PROFILE_IMG_DIR, newFilename);
+
+            try {
+                fs.renameSync(req.file.path, newPath);
+                usuario.temImagem = true;
+            } catch (error) {
+                console.error('Erro ao mover a imagem:', error);
+            }
+        }
+
+        salvarUsuarios(usuarios);
+    }
+
+    res.redirect('/profile');
+});
+
+// ========= INICIAR SERVIDOR =========
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });

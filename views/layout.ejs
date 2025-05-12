@@ -79,7 +79,8 @@
         <a href="#" id="avatar" class="avatar"
           style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; margin-left: auto;">
           <% if (usuario.temImagem) { %>
-            <img src="/images/<%= usuario.id.toString().padStart(5, '0') %>-avatar.jpg" alt="Avatar de <%= usuario.name %>"
+            <img src="/images/<%= usuario.id.toString().padStart(5, '0') %>-avatar.jpg"
+              alt="Avatar de <%= usuario.name %>"
               style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
             <% } else { %>
               <svg fill="currentColor" viewBox="0 0 24 24" style="width: 40px; height: 40px;">
@@ -114,8 +115,12 @@
   <!-- Popup de perfil -->
   <div id="profile-popup">
     <div class="popup-header">
-      <p><span id="popup-username"><%= usuario.name %></span></p>
-      <button class="add-task-btn" onclick="copy()"><%= usuario.email %></button>
+      <p><span id="popup-username">
+          <%= usuario.name %>
+        </span></p>
+      <button class="add-task-btn" onclick="copyText(this)" style="text-decoration: none;">
+        <%= usuario.email %>
+      </button>
     </div>
     <div class="popup-actions">
       <button id="view-profile" class="popup-btn">Ver Perfil</button>
@@ -179,9 +184,36 @@
       });
 
       viewProfileBtn?.addEventListener('click', () => {
-        window.location.href = '/perfil';
+        window.location.href = '/profile';
       });
     });
+
+    // Copiar texto
+    function copyText(element) {
+      let textToCopy = "";
+
+      // Verifica se é um input ou textarea
+      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+        textToCopy = element.value;
+      } else {
+        textToCopy = element.textContent || element.innerText;
+      }
+
+      // Usa a API moderna do clipboard
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(textToCopy)
+          .then(() => console.log("Texto copiado com sucesso!"))
+          .catch(err => console.error("Erro ao copiar texto:", err));
+      } else {
+        // Fallback para navegadores antigos
+        const tempInput = document.createElement("textarea");
+        tempInput.value = textToCopy;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+      }
+    }
   </script>
 
 </body>

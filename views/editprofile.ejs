@@ -1,0 +1,140 @@
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<div class="page-center">
+  <h2 class="section-title">Editar Perfil</h2>
+
+  <form method="POST" action="/profile" enctype="multipart/form-data" class="form-container fade-in">
+    <div class="form-group form-avatar">
+      <label for="imagem" class="avatar-label">
+        <div class="avatar-wrapper">
+          <% if (usuario.temImagem) { %>
+            <img id="preview" src="/images/<%= usuario.id.toString().padStart(5, '0') %>-avatar.jpg" alt="Avatar" />
+            <% } else { %>
+              <div class="avatar-placeholder" id="preview">?</div>
+              <% } %>
+                <span class="edit-overlay">Editar imagem</span>
+        </div>
+      </label>
+      <input type="file" id="imagem" name="imagem" accept="image/*" hidden />
+    </div>
+
+    <div class="form-group">
+      <label for="name" class="form-label">Nome</label>
+      <input type="text" id="name" name="name" required class="form-input" value="<%= usuario.name %>" />
+    </div>
+
+    <div class="form-group">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" id="email" name="email" required class="form-input" value="<%= usuario.email %>" />
+    </div>
+
+    <div class="form-group">
+      <label for="phone" class="form-label">Telefone</label>
+      <input type="tel" id="phone" name="phone" class="form-input" value="<%= usuario.phone %>" />
+    </div>
+
+    <div class="form-group">
+      <label for="birthdate" class="form-label">Data de Nascimento</label>
+      <input type="date" id="birthdate" name="birthdate" class="form-input" value="<%= usuario.birthdate %>" />
+    </div>
+
+    <div class="form-group">
+      <a href="#" id="togglePasswordFields" style="color: #1172da; cursor: pointer;">Alterar senha</a>
+    </div>
+
+    <div id="newPasswordFields" style="display: none;">
+      <div class="form-group" style="position: relative;">
+        <label for="newPassword" class="form-label">Nova senha:</label>
+        <input type="password" name="newPassword" class="form-input" id="newPassword" />
+        <i class="fa fa-eye-slash toggle-password" toggle="#newPassword"
+          style="position: absolute; right: 10px; top: 35px; cursor: pointer;"></i>
+      </div>
+
+      <div class="form-group" style="position: relative;">
+        <label for="confirmPassword" class="form-label">Confirmar nova senha:</label>
+        <input type="password" name="confirmPassword" class="form-input" id="confirmPassword" />
+        <i class="fa fa-eye-slash toggle-password" toggle="#confirmPassword"
+          style="position: absolute; right: 10px; top: 35px; cursor: pointer;"></i>
+      </div>
+    </div>
+    <p id="passwordMismatch" style="color: rgb(190, 13, 13); display: none; margin-top: -10px;">
+      As senhas não coincidem.
+    </p>
+
+    <button type="submit" class="submit-btn" id="submitBtn">Salvar Alterações</button>
+  </form>
+</div>
+
+<script>
+  // Pré-visualização da imagem
+  const inputImagem = document.getElementById('imagem');
+  const preview = document.getElementById('preview');
+
+  inputImagem.addEventListener('change', function () {
+    const file = inputImagem.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => preview.src = e.target.result;
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Alternar visualização de senha
+  document.querySelectorAll('.toggle-password').forEach(icon => {
+    icon.addEventListener('click', () => {
+      const input = document.querySelector(icon.getAttribute('toggle'));
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      }
+    });
+  });
+
+  // Mostrar campos de nova senha
+  document.getElementById('togglePasswordFields').addEventListener('click', function (e) {
+    e.preventDefault();
+    const section = document.getElementById('newPasswordFields');
+    section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    this.textContent = section.style.display === 'block' ? 'Cancelar alteração de senha' : 'Alterar senha';
+  });
+
+  const form = document.querySelector('form');
+  const newPassword = document.getElementById('newPassword');
+  const confirmPassword = document.getElementById('confirmPassword');
+  const passwordMismatchText = document.getElementById('passwordMismatch');
+  let triedToSubmit = false;
+
+  function validatePasswords() {
+    const mismatch = newPassword.value !== confirmPassword.value;
+
+    if (triedToSubmit) {
+      if (mismatch) {
+        confirmPassword.classList.add('input-error');
+        passwordMismatchText.style.display = 'block';
+      } else {
+        confirmPassword.classList.remove('input-error');
+        passwordMismatchText.style.display = 'none';
+      }
+    }
+  }
+
+  form.addEventListener('submit', function (e) {
+    const isChangingPassword = document.getElementById('newPasswordFields').style.display === 'block';
+    const mismatch = newPassword.value !== confirmPassword.value;
+
+    if (isChangingPassword && mismatch) {
+      e.preventDefault();
+      triedToSubmit = true;
+      validatePasswords();
+    }
+  });
+
+  newPassword.addEventListener('input', validatePasswords);
+  confirmPassword.addEventListener('input', validatePasswords);
+</script>
