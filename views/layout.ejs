@@ -73,7 +73,7 @@
   <header>
     <div class="header-content">
       <button id="menu-toggle">☰</button>
-      <h1>Controle de Projetos</h1>
+      <h1 style="margin-left: 1.25rem;">Controle de Projetos</h1>
 
       <% if (usuario) { %>
         <a href="#" id="avatar" class="avatar"
@@ -101,6 +101,9 @@
       <ul class="sidebar-nav">
         <li><a href="/">Lista</a></li>
         <li><a href="/create">Criar Projeto</a></li>
+        <% if (usuario && usuario.role === 'admin') { %>
+          <li><a href="/createUser">Adicionar Usuário</a></li>
+        <% } %>
       </ul>
       <button id="theme-toggle">
         Alternar Tema
@@ -117,6 +120,9 @@
     <div class="popup-header">
       <p><span id="popup-username">
           <%= usuario.name %>
+        </span></p>
+      <p><span id="popup-username">
+          <%= usuario.setor %>
         </span></p>
       <button class="add-task-btn" onclick="copyText(this)" style="text-decoration: none;">
         <%= usuario.email %>

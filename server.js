@@ -10,7 +10,14 @@ const multer = require('multer');
 const PROFILE_IMG_DIR = 'U:/Producao/SJP/Engenharia de Processos/Desenhos e modelagem 3D/Projeto Luan/projects/profile';
 
 const app = express();
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 const PORT = 3000;
+
+const upload = multer({
+    dest: 'uploads/', // pasta temporária antes de mover
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+});
 
 // ========= CONFIGURAÇÕES =========
 app.set('view engine', 'ejs');
@@ -102,52 +109,87 @@ const bcrypt = require('bcrypt');
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
+    const usuarios = carregarUsuarios();
+
     const usuario = usuarios.find(u => u.username === username);
 
-    if (usuario) {
-        const senhaCorreta = await bcrypt.compare(password, usuario.password);
-
-        if (senhaCorreta) {
-            // Login com senha hash OK
-            req.session.usuario = {
-                id: usuario.id,
-                username: usuario.username,
-                name: usuario.name,
-                role: usuario.role
-            };
-            return res.redirect('/');
-        }
-
-        // Tenta como senha em texto puro (usuário antigo)
-        if (usuario.password === password) {
-            // Atualiza a senha para o formato criptografado
-            const hashedPassword = await bcrypt.hash(password, 10);
-            usuario.password = hashedPassword;
-
-            // Salva no banco/arquivo
-            salvarUsuarios(usuarios);
-
-            // Continua com o login
-            req.session.usuario = {
-                id: usuario.id,
-                username: usuario.username,
-                name: usuario.name,
-                role: usuario.role
-            };
-            return res.redirect('/');
-        }
+    // Caso 1: Usuário não encontrado
+    if (!usuario) {
+        return res.render('login', {
+            title: 'Login',
+            erro: 'Usuário não encontrado',
+            layout: false
+        });
     }
 
-    // Falha geral
-    res.render('login', {
-        title: 'Login',
-        erro: 'Usuário ou senha inválidos',
-        layout: false
-    });
+    // Caso 2: Senha ainda não definida
+    if (!usuario.password || usuario.password.trim() === '') {
+        req.session.usuarioTemp = {
+            id: usuario.id,
+            username: usuario.username,
+            name: usuario.name ?? null,
+            email: usuario.email ?? null,
+            setor: usuario.setor ?? null
+        };
+        return res.redirect('/password');
+    }
+
+    // Caso 3: Senha incorreta
+    const senhaCorreta = await bcrypt.compare(password, usuario.password);
+    if (!senhaCorreta) {
+        return res.render('login', {
+            title: 'Login',
+            erro: 'Senha incorreta',
+            layout: false
+        });
+    }
+
+    // Caso 4: Login bem-sucedido
+    req.session.usuario = {
+        id: usuario.id,
+        username: usuario.username,
+        name: usuario.name,
+        setor: usuario.setor,
+        role: usuario.role
+    };
+
+    return res.redirect('/');
 });
 
 app.get('/logout', (req, res) => {
     req.session.destroy(() => res.redirect('/login'));
+});
+
+app.get('/password', (req, res) => {
+    if (!req.session.usuarioTemp) return res.redirect('/login');
+
+    res.render('password', {
+        title: 'Definir Senha',
+        usuario: req.session.usuarioTemp
+    });
+});
+
+app.post('/password', async (req, res) => {
+    const { senha, confirmar } = req.body;
+
+    if (!req.session.usuarioTemp) return res.redirect('/login');
+    if (senha !== confirmar) return res.send('Senhas não coincidem.');
+
+    const usuario = usuarios.find(u => u.username === req.session.usuarioTemp.username);
+    if (!usuario) return res.redirect('/login');
+
+    usuario.password = await bcrypt.hash(senha, 10);
+    salvarUsuarios(usuarios);
+
+    req.session.usuario = {
+        id: usuario.id,
+        username: usuario.username,
+        name: usuario.name,
+        role: usuario.role
+    };
+    delete req.session.usuarioTemp;
+
+    res.redirect('/');
 });
 
 // ========= ROTAS DE PROJETOS =========
@@ -342,38 +384,37 @@ app.delete('/projetos/:projId/tarefas/:tarefaId/subtarefas/:subtarefaId', autent
 });
 
 // ========= ROTAS DE PERFIL =========
-const upload = multer({ dest: path.join(__dirname, 'public/images') });
-
 app.get('/profile', autenticar, (req, res) => {
     const usuario = usuarios.find(u => u.username === req.session.usuario.username);
     res.render('editprofile', { title: 'Editar Perfil', usuario });
 });
 
-app.post('/profile', upload.single('imagem'), async (req, res) => {
-    const { name, email, phone, birthdate, confirmPassword } = req.body;
+app.post('/profile', upload.single('profilePicture'), async (req, res) => {
+    const { name, email, phone, setor, birthdate, newPassword, confirmPassword } = req.body;
     const usuario = usuarios.find(u => u.username === req.session.usuario.username);
 
     if (usuario) {
         usuario.name = name;
         usuario.email = email;
         usuario.phone = phone;
+        usuario.setor = setor;
         usuario.birthdate = birthdate;
 
-        if (confirmPassword) {
-            const hashedPassword = await bcrypt.hash(confirmPassword, 10);
-            usuario.password = hashedPassword;
+        // Se o usuário está tentando alterar a senha
+        if (newPassword && confirmPassword && newPassword === confirmPassword) {
+            try {
+                const hashedPassword = await bcrypt.hash(confirmPassword, 10); // 10 é o custo do salt
+                usuario.password = hashedPassword;
+            } catch (err) {
+                console.error('Erro ao gerar hash da senha:', err);
+                return res.status(500).send('Erro ao salvar nova senha.');
+            }
         }
 
         if (req.file) {
-            const newFilename = `${String(usuario.id).padStart(5, '0')}-avatar.jpg`;
-            const newPath = path.join(PROFILE_IMG_DIR, newFilename);
-
-            try {
-                fs.renameSync(req.file.path, newPath);
-                usuario.temImagem = true;
-            } catch (error) {
-                console.error('Erro ao mover a imagem:', error);
-            }
+            const newPath = path.join(req.file.destination, `${String(usuario.id).padStart(5, '0')}-avatar.jpg`);
+            fs.renameSync(req.file.path, newPath);
+            usuario.temImagem = true;
         }
 
         salvarUsuarios(usuarios);
@@ -382,7 +423,72 @@ app.post('/profile', upload.single('imagem'), async (req, res) => {
     res.redirect('/profile');
 });
 
+// ========= CRIAÇÃO DO USUÁRIO =========
+app.get('/createUser', (req, res) => {
+    if (!req.session.usuario || req.session.usuario.role !== 'admin') {
+        return res.status(403).send('Acesso negado');
+    }
+
+    res.render('createUser', {
+        usuario: req.session.usuario,
+        title: 'Criar Novo Usuário',
+    });
+});
+
+app.post('/createUser', upload.single('imagem'), async (req, res) => {
+    if (!req.session.usuario || req.session.usuario.role !== 'admin') {
+        return res.status(403).send('Acesso negado');
+    }
+
+    const { name, username, email, phone, setor, birthdate, role } = req.body;
+    const usuarios = carregarUsuarios();
+
+    // Verifica se usuário já existe
+    const existente = usuarios.find(u => u.username === username || u.email === email);
+    if (existente) {
+        return res.status(400).send('Usuário ou e-mail já cadastrado.');
+    }
+
+    // Cria novo usuário
+    const novoUsuario = {
+        id: uuidv4(),
+        name,
+        username,
+        email,
+        phone,
+        setor,
+        birthdate,
+        role,
+        password: '', // senha vazia até o primeiro login
+        temImagem: false
+    };
+
+    // Salva imagem, se houver
+    if (req.file) {
+        const ext = path.extname(req.file.originalname);
+        const imageName = `${String(novoUsuario.id).padStart(5, '0')}-avatar.jpg`;
+        const newPath = path.join(__dirname, 'public', 'images', imageName);
+        fs.renameSync(req.file.path, newPath);
+        novoUsuario.temImagem = true;
+    }
+
+    // Salva no JSON
+    usuarios.push(novoUsuario);
+    salvarUsuarios(usuarios);
+
+    res.redirect('/');
+});
+
 // ========= INICIAR SERVIDOR =========
+io.on('connection', socket => {
+    console.log('Novo usuário conectado');
+
+    socket.on('projetoAtualizado', data => {
+        // Reenvia o evento para todos os outros clientes
+        socket.broadcast.emit('atualizarItem', data);
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });

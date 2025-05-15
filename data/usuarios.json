@@ -2,21 +2,24 @@
   {
     "id": 1,
     "username": "admin",
-    "name": "Administrator",
+    "name": "Luan Bastos de Paula",
     "email": "luan.paula@lumicenter.com",
+    "setor": "Engenharia de Processos",
     "birthdate": "2000-09-11",
-    "password": "$2b$10$qbdwHPilfhNhthFRno3h3udUAUDMddg2WVCaERmzFMCXEmRcHEDRy",
+    "password": "$2b$10$DmB7PTj88WhixJPbyLXOM.wSZrouj5n.QZZcjoFqcFT3ZLVb1zwZG",
     "phone": "+55 11 9876-5432",
     "role": "admin",
     "profilePictureUrl": "/images/00001-avatar.jpg",
     "createdAt": "2024-05-09T12:00:00Z",
-    "lastLogin": "2025-05-09T08:45:00Z"
+    "lastLogin": "2025-05-09T08:45:00Z",
+    "temImagem": true
   },
   {
     "id": 2,
     "username": "thiago.carlos",
     "name": "Thiago Morais Carlos",
     "email": "thiago.carlos@lumicenter.com",
+    "setor": "Engenharia de Processos",
     "birthdate": "1997-05-23",
     "password": "$2b$10$OzZ5o38/U2kTBX9r1JdRvuUPzLxMm3rFIF36umvTdb5u8SsocVMI6",
     "phone": "+55 11 9876-5432",
@@ -25,5 +28,47 @@
     "createdAt": "2024-05-09T12:00:00Z",
     "lastLogin": "2025-05-09T08:45:00Z",
     "temImagem": true
+  },
+  {
+    "id": 3,
+    "username": "guilherme.campos",
+    "name": "Guilherme Freire de Campos",
+    "email": "guilherme.campos@lumicenter.com",
+    "setor": "Engenharia de Processos",
+    "birthdate": null,
+    "password": "$2b$10$UMEwxV.qfz1pMh0x4KMojO9LprgwL415.0RzLTMCn4uSbv9H8ksIG",
+    "phone": null,
+    "role": "user",
+    "profilePictureUrl": null,
+    "createdAt": "2025-05-13T12:24:07.518Z",
+    "lastLogin": null,
+    "temImagem": false
+  },
+  {
+    "id": 4,
+    "username": "emilia.sampaio",
+    "name": "Emília Francisca Alves Sampaio",
+    "email": "emilia.sampaio@lumicenter.com",
+    "setor": "Estamparia",
+    "birthdate": null,
+    "password": null,
+    "phone": null,
+    "role": "user",
+    "profilePictureUrl": null,
+    "createdAt": "2025-05-13T12:33:44.495Z",
+    "lastLogin": null,
+    "temImagem": false
+  },
+  {
+    "id": "6cd2a6fa-3e69-4980-bdcf-33e0a3dd559a",
+    "name": "Ithalo Tylinski de Castro",
+    "username": "ithalo.castro",
+    "email": "ithalo.castro@lumicenter.com",
+    "phone": "41984305020",
+    "setor": "Engenharia de Processos",
+    "birthdate": "2002-04-20",
+    "role": "user",
+    "password": "$2b$10$YC1E7kJnz2W55iKmIxMtluFhssnZbyLHYfqHnFnimg6WlNcNUeuKu",
+    "temImagem": false
   }
 ]

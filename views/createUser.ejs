@@ -1,0 +1,86 @@
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+<div class="page-center">
+  <h2 class="section-title">Adicionar Novo Usuário</h2>
+
+  <form method="POST" action="/createUser" enctype="multipart/form-data" class="form-container fade-in">
+    <div class="form-group form-avatar">
+      <label for="imagem" class="avatar-label">
+        <div class="avatar-wrapper">
+          <div class="avatar-placeholder" id="preview">?</div>
+          <span class="edit-overlay">Selecionar imagem</span>
+        </div>
+      </label>
+      <input type="file" id="imagem" name="imagem" accept="image/*" hidden />
+    </div>
+
+    <div class="form-group">
+      <label for="name" class="form-label">Nome</label>
+      <input type="text" id="name" name="name" required class="form-input" />
+    </div>
+
+    <div class="form-group">
+      <label for="username" class="form-label">Usuário</label>
+      <input type="text" id="username" name="username" required class="form-input" />
+    </div>
+    
+    <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" id="email" name="email" required class="form-input" />
+    </div>
+    
+    <div class="form-group">
+      <label for="setor" class="form-label">Setor</label>
+      <input type="text" id="setor" name="setor" required class="form-input" />
+    </div>
+    
+    <div class="form-group">
+        <label for="phone" class="form-label">Telefone</label>
+        <input type="tel" id="phone" name="phone" class="form-input" />
+    </div>
+
+    <div class="form-group">
+      <label for="birthdate" class="form-label">Data de Nascimento</label>
+      <input type="date" id="birthdate" name="birthdate" class="form-input"/>
+    </div>
+
+    <div class="form-group">
+      <label for="role" class="form-label">Função</label>
+      <select id="role" name="role" class="form-input" required>
+        <option value="user">Usuário</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+
+    <p style="font-size: 0.9rem; color: #555; margin-bottom: 1rem;">
+      A senha será definida pelo usuário no primeiro login.
+    </p>
+
+    <button type="submit" class="submit-btn">Criar Usuário</button>
+  </form>
+</div>
+
+<script>
+  // Preview da imagem
+  const inputImagem = document.getElementById('imagem');
+  const preview = document.getElementById('preview');
+
+  inputImagem.addEventListener('change', function () {
+    const file = inputImagem.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.alt = "Avatar";
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.borderRadius = "50%";
+        preview.innerHTML = "";
+        preview.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+</script>

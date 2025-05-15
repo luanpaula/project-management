@@ -192,20 +192,66 @@
     </div>
 
     <script>
+      const EXPANDIDOS_PROJETOS_KEY = 'projetosExpandido';
+      const EXPANDIDOS_SUBTAREFAS_KEY = 'subtarefasExpandido';
+
+      // Restaurar visualização ao carregar a página
+      document.addEventListener('DOMContentLoaded', () => {
+        const projetos = JSON.parse(localStorage.getItem(EXPANDIDOS_PROJETOS_KEY)) || [];
+        projetos.forEach(id => {
+          const row = document.getElementById(`tarefas-${id}`);
+          const icon = document.getElementById(`icone-${id}`);
+          if (row && icon) {
+            row.classList.remove('hidden');
+            icon.textContent = '▾';
+          }
+        });
+
+        const subtarefas = JSON.parse(localStorage.getItem(EXPANDIDOS_SUBTAREFAS_KEY)) || [];
+        subtarefas.forEach(([projId, tarefaId]) => {
+          const row = document.getElementById(`subtarefas-${projId}-${tarefaId}`);
+          const icon = document.getElementById(`icone-sub-${projId}-${tarefaId}`);
+          if (row && icon) {
+            row.classList.remove('hidden');
+            icon.textContent = '▾';
+          }
+        });
+      });
       function toggleTarefas(projId) {
         const row = document.getElementById(`tarefas-${projId}`);
         const icon = document.getElementById(`icone-${projId}`);
-        row.classList.toggle('hidden');
-        icon.textContent = row.classList.contains('hidden') ? '▸' : '▾';
+        const lista = new Set(JSON.parse(localStorage.getItem(EXPANDIDOS_PROJETOS_KEY)) || []);
+
+        const isHidden = row.classList.toggle('hidden');
+        icon.textContent = isHidden ? '▸' : '▾';
+
+        if (isHidden) {
+          lista.delete(projId);
+        } else {
+          lista.add(projId);
+        }
+
+        localStorage.setItem(EXPANDIDOS_PROJETOS_KEY, JSON.stringify([...lista]));
       }
 
       function toggleSubtarefas(projId, tarefaId) {
-        const subtarefaTable = document.getElementById(`subtarefas-${projId}-${tarefaId}`);
-        const icone = document.getElementById(`icone-sub-${projId}-${tarefaId}`);
-        const isHidden = subtarefaTable.classList.contains("hidden");
+        const row = document.getElementById(`subtarefas-${projId}-${tarefaId}`);
+        const icon = document.getElementById(`icone-sub-${projId}-${tarefaId}`);
+        const key = EXPANDIDOS_SUBTAREFAS_KEY;
 
-        subtarefaTable.classList.toggle("hidden", !isHidden);
-        icone.textContent = isHidden ? "▾" : "▸";
+        let lista = JSON.parse(localStorage.getItem(key)) || [];
+        const index = lista.findIndex(([p, t]) => p === projId && t === tarefaId);
+
+        const isHidden = row.classList.toggle('hidden');
+        icon.textContent = isHidden ? '▸' : '▾';
+
+        if (isHidden && index !== -1) {
+          lista.splice(index, 1);
+        } else if (!isHidden && index === -1) {
+          lista.push([projId, tarefaId]);
+        }
+
+        localStorage.setItem(key, JSON.stringify(lista));
       }
 
 
@@ -386,6 +432,14 @@
                 if (selected) selected.setAttribute('selected', true);
               }
             }
+            socket.emit('projetoAtualizado', {
+              tipo,
+              projetoId,
+              tarefaId,
+              subtarefaId,
+              campo,
+              valor
+            });
           }
         });
       }
@@ -763,5 +817,28 @@
 
         document.getElementById('context-menu').classList.add('hidden');
       }
+
+      socket.on('atualizarItem', ({ tipo, projetoId, tarefaId, subtarefaId, campo, valor }) => {
+        // Encontra o input correspondente pelo dataset
+        const selector = `.table-input[data-tipo="${tipo}"][data-campo="${campo}"][data-projeto-id="${projetoId}"${tarefaId ? `][data-tarefa-id="${tarefaId}"` : ''
+          }${subtarefaId ? `][data-subtarefa-id="${subtarefaId}"` : ''}]`;
+
+        const input = document.querySelector(selector);
+        if (input) {
+          if (input.type === 'checkbox') {
+            input.checked = valor;
+            input.defaultChecked = valor;
+          } else {
+            input.value = valor;
+            input.defaultValue = valor;
+            if (input.tagName === 'SELECT') {
+              const options = input.querySelectorAll('option');
+              options.forEach(opt => opt.removeAttribute('selected'));
+              const selected = input.querySelector(`option[value="${valor}"]`);
+              if (selected) selected.setAttribute('selected', true);
+            }
+          }
+        }
+      });
     </script>
     <% } %>
